@@ -6,6 +6,7 @@ end
 -- This is a pretty old script, so don’t joke about the source – it’s older than 90% of the Roblox community. -- 
 
 repeat wait() until game:IsLoaded()
+repeat wait() until game.Players.LocalPlayer
 
 local IsPremium = true 
 local DidKey = false
