@@ -1,276 +1,21 @@
-print("Script Source Released on 17.03.2024 (DD/MM/YYYY because Islands is Dead!")
-warn("THIS SCRIPT IS DISCONTINUED FROM NOW!")
+print("Script updated on 10.4.2025 (DD/MM/YYYY ")
+warn("This script is very undetected :)")
 for i = 1, 50 do
-  print("Nekohub on Top | discord.gg/MbsxuDEzgT")
+  print("EdHub V4")
 end
 -- This is a pretty old script, so don’t joke about the source – it’s older than 90% of the Roblox community. -- 
 
 repeat wait() until game:IsLoaded()
-repeat wait() until game.Players.LocalPlayer
 
 local IsPremium = true 
 local DidKey = false
 local ScriptVersion = "V4"
 
-local FileName = "Nekohub"
+local FileName = "EdHub"
 local GameName = "Islands"
 local DeveloperVersion = true
 
 local NotificationIcon = "rbxassetid://1234567890"
-
--- Advanced Logging System
-local LoggingSystem = {
-	LogFile = "Nekohub/Islands/Logs/",
-	PCWorkspacePath = "C:/Users/" .. game.Players.LocalPlayer.Name .. "/Desktop/Nekohub_Logs/", -- PC workspace path
-	MaxLogSize = 1000000, -- 1MB max per log file
-	LogLevels = {
-		DEBUG = 1,
-		INFO = 2,
-		WARN = 3,
-		ERROR = 4,
-		CRITICAL = 5
-	},
-	CurrentLevel = 2, -- INFO level by default
-	Logs = {},
-	LastKickTime = 0,
-	KickCount = 0,
-	SessionStartTime = tick(),
-	PCLogFile = nil,
-	LogsToPC = false
-}
-
--- Initialize logging
-local function initLogging()
-	-- Create logs directory
-	if not isfolder(LoggingSystem.LogFile) then
-		makefolder(LoggingSystem.LogFile)
-	end
-	
-	-- Create session log file
-	local sessionTime = os.date("!%Y-%m-%d_%H-%M-%S")
-	LoggingSystem.SessionLogFile = LoggingSystem.LogFile .. "session_" .. sessionTime .. ".log"
-	
-	-- Create PC workspace directory and log file
-	local success, err = pcall(function()
-		-- Try to create PC workspace directory
-		LoggingSystem.PCLogFile = LoggingSystem.PCWorkspacePath .. "kick_log_" .. sessionTime .. ".txt"
-		LoggingSystem.LogsToPC = true
-		
-		-- Create initial log file on PC
-		local initialLog = "=== NEKOHUB KICK LOG ===\n"
-		initialLog = initialLog .. "Session Started: " .. sessionTime .. "\n"
-		initialLog = initialLog .. "Player: " .. game.Players.LocalPlayer.Name .. "\n"
-		initialLog = initialLog .. "UserID: " .. game.Players.LocalPlayer.UserId .. "\n"
-		initialLog = initialLog .. "Game Version: " .. game.PlaceVersion .. "\n"
-		initialLog = initialLog .. "Script Version: " .. ScriptVersion .. "\n"
-		initialLog = initialLog .. "================================\n\n"
-		
-		writefile(LoggingSystem.PCLogFile, initialLog)
-	end)
-	
-	if not success then
-		warn("Failed to create PC log file:", err)
-		LoggingSystem.LogsToPC = false
-	end
-	
-	-- Log session start
-	LoggingSystem:Log("INFO", "Session started", {
-		PlayerName = game.Players.LocalPlayer.Name,
-		UserId = game.Players.LocalPlayer.UserId,
-		GameVersion = game.PlaceVersion,
-		ScriptVersion = ScriptVersion,
-		PCLoggingEnabled = LoggingSystem.LogsToPC,
-		PCLogPath = LoggingSystem.PCLogFile
-	})
-end
-
--- Logging function
-function LoggingSystem:Log(level, message, data)
-	-- Safety check for player availability
-	if not game.Players or not game.Players.LocalPlayer then
-		warn("LoggingSystem: Player not available, skipping log")
-		return
-	end
-	
-	local levelNum = self.LogLevels[level] or 2
-	if levelNum < self.CurrentLevel then return end
-	
-	local timestamp = os.date("!%Y-%m-%d %H:%M:%S")
-	local logEntry = {
-		timestamp = timestamp,
-		level = level,
-		message = message,
-		data = data or {},
-		playerPosition = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.HumanoidRootPart and game.Players.LocalPlayer.Character.HumanoidRootPart.Position or "Unknown",
-		gameTime = tick() - self.SessionStartTime
-	}
-	
-	-- Add to memory logs
-	table.insert(self.Logs, logEntry)
-	
-	-- Keep only last 1000 logs in memory
-	if #self.Logs > 1000 then
-		table.remove(self.Logs, 1)
-	end
-	
-	-- Print to console
-	local logString = string.format("[%s] [%s] %s", timestamp, level, message)
-	if data then
-		logString = logString .. " | Data: " .. game:GetService("HttpService"):JSONEncode(data)
-	end
-	print(logString)
-	
-	-- Write to file (async)
-	task.spawn(function()
-		local success, err = pcall(function()
-			local logLine = logString .. "\n"
-			writefile(self.SessionLogFile, readfile(self.SessionLogFile) .. logLine)
-		end)
-		if not success then
-			warn("Failed to write to log file:", err)
-		end
-	end)
-	
-	-- Write to PC workspace (async)
-	if self.LogsToPC and self.PCLogFile then
-		task.spawn(function()
-			local success, err = pcall(function()
-				local logLine = logString .. "\n"
-				writefile(self.PCLogFile, readfile(self.PCLogFile) .. logLine)
-			end)
-			if not success then
-				warn("Failed to write to PC log file:", err)
-			end
-		end)
-	end
-end
-
--- Function to save comprehensive kick report to PC
-local function saveKickReportToPC()
-	if not LoggingSystem.LogsToPC or not LoggingSystem.PCLogFile then return end
-	
-	local success, err = pcall(function()
-		local kickReport = "\n\n=== KICK REPORT ===\n"
-		kickReport = kickReport .. "Kick Time: " .. os.date("!%Y-%m-%d %H:%M:%S") .. "\n"
-		kickReport = kickReport .. "Session Duration: " .. (tick() - LoggingSystem.SessionStartTime) .. " seconds\n"
-		kickReport = kickReport .. "Total Kicks: " .. LoggingSystem.KickCount .. "\n"
-		kickReport = kickReport .. "Player Position: " .. tostring(game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.HumanoidRootPart and game.Players.LocalPlayer.Character.HumanoidRootPart.Position or "Unknown") .. "\n"
-		kickReport = kickReport .. "Safety Mode: " .. tostring(_G.BlockPrinterSafetyMode) .. "\n"
-		kickReport = kickReport .. "Advanced Bypass: " .. tostring(_G.BlockPrinterAdvancedBypass) .. "\n"
-		kickReport = kickReport .. "================================\n\n"
-		
-		-- Add recent logs (last 20)
-		kickReport = kickReport .. "=== RECENT LOGS ===\n"
-		for i = math.max(1, #LoggingSystem.Logs - 19), #LoggingSystem.Logs do
-			local log = LoggingSystem.Logs[i]
-			if log then
-				kickReport = kickReport .. "[" .. log.timestamp .. "] [" .. log.level .. "] " .. log.message .. "\n"
-				if log.data and next(log.data) then
-					kickReport = kickReport .. "  Data: " .. game:GetService("HttpService"):JSONEncode(log.data) .. "\n"
-				end
-			end
-		end
-		
-		kickReport = kickReport .. "\n=== END OF KICK REPORT ===\n"
-		
-		-- Append to PC log file
-		writefile(LoggingSystem.PCLogFile, readfile(LoggingSystem.PCLogFile) .. kickReport)
-	end)
-	
-	if not success then
-		warn("Failed to save kick report to PC:", err)
-	end
-end
-
--- Kick detection and logging
-local function setupKickDetection()
-	-- Monitor for kicks
-	game.Players.LocalPlayer.CharacterRemoving:Connect(function()
-		LoggingSystem:Log("WARN", "Character removed - possible kick", {
-			TimeSinceLastKick = tick() - LoggingSystem.LastKickTime,
-			KickCount = LoggingSystem.KickCount + 1
-		})
-		LoggingSystem.LastKickTime = tick()
-		LoggingSystem.KickCount = LoggingSystem.KickCount + 1
-		
-		-- Save kick report to PC
-		saveKickReportToPC()
-	end)
-	
-	-- Monitor for teleportation (possible kick)
-	game.Players.LocalPlayer.OnTeleport:Connect(function(teleportType, placeId, spawnName)
-		LoggingSystem:Log("INFO", "Teleportation detected", {
-			TeleportType = tostring(teleportType),
-			PlaceId = placeId,
-			SpawnName = spawnName,
-			IsKick = teleportType == Enum.TeleportType.Kick
-		})
-		
-		if teleportType == Enum.TeleportType.Kick then
-			LoggingSystem:Log("CRITICAL", "KICK DETECTED!", {
-				PlaceId = placeId,
-				SpawnName = spawnName,
-				KickCount = LoggingSystem.KickCount + 1,
-				SessionDuration = tick() - LoggingSystem.SessionStartTime
-			})
-			
-			-- Save kick report to PC
-			saveKickReportToPC()
-		end
-	end)
-	
-	-- Monitor for errors
-	game:GetService("LogService").MessageOut:Connect(function(message, messageType)
-		if messageType == Enum.MessageType.MessageError or messageType == Enum.MessageType.MessageWarning then
-			LoggingSystem:Log("ERROR", "Game Error/Warning", {
-				Message = message,
-				MessageType = tostring(messageType)
-			})
-		end
-	end)
-end
-
--- Performance monitoring
-local function setupPerformanceMonitoring()
-	local lastFPS = 0
-	local lastMemory = 0
-	
-	game:GetService("RunService").Heartbeat:Connect(function()
-		local currentTime = tick()
-		
-		-- Log performance every 30 seconds
-		if currentTime - LoggingSystem.LastPerformanceLog > 30 then
-			local fps = 1 / game:GetService("RunService").Heartbeat:Wait()
-			local memory = game:GetService("Stats"):GetTotalMemoryUsageMb()
-			
-			LoggingSystem:Log("DEBUG", "Performance Update", {
-				FPS = math.floor(fps),
-				MemoryMB = memory,
-				FPSChange = fps - lastFPS,
-				MemoryChange = memory - lastMemory
-			})
-			
-			LoggingSystem.LastPerformanceLog = currentTime
-			lastFPS = fps
-			lastMemory = memory
-		end
-	end)
-end
-
--- Wait for player to be fully loaded before initializing logging
-repeat wait() until game.Players.LocalPlayer.Character
-
--- Initialize logging system with error handling
-local success, err = pcall(function()
-	initLogging()
-	setupKickDetection()
-	setupPerformanceMonitoring()
-end)
-
-if not success then
-	warn("Failed to initialize logging system:", err)
-	-- Continue without logging if it fails
-end
 
 function SendNotification(Title, Text)
 	game:GetService("StarterGui"):SetCore("SendNotification",{
@@ -307,15 +52,26 @@ end
 
 
 function ReadFile(Name) 
-	if isfile(FileName.."/"..GameName.."/"..Name) == true then
-		return readfile(FileName.."/"..GameName.."/"..Name)
-	elseif isfile(FileName.."/"..GameName..Name) == true then
-		return readfile(FileName.."/"..GameName..Name)
-	else
-		-- File doesn't exist, return empty string or nil
-		warn("File does not exist: " .. FileName.."/"..GameName.."/"..Name)
-		return ""
+	-- Normalize absolute paths like .../EdHub/Islands/Schematica/Shop spawn -> Schematica/Shop spawn
+	local base = FileName.."/"..GameName.."/"
+	local normalized = Name
+	local startIndex = string.find(Name, base, 1, true)
+	if startIndex then
+		normalized = string.sub(Name, startIndex + #base)
 	end
+
+	-- Only perform reads inside our sandboxed base directory
+	if isfile(base..normalized) == true then
+		return readfile(base..normalized)
+	end
+	if isfile(FileName.."/"..GameName..Name) == true then
+		return readfile(FileName.."/"..GameName..Name)
+	end
+	if isfile(Name) == true and not string.match(Name, "^/") then
+		-- Last-gasp relative path without a leading slash
+		return readfile(Name)
+	end
+	return nil
 end
 
 function CreateFolder(Name)
@@ -323,11 +79,6 @@ function CreateFolder(Name)
 end	
 
 function CreateFile(Name, Data, CheckIfFile)
-	-- Ensure Data is a string before writing to file
-	if type(Data) ~= "string" then
-		Data = tostring(Data)
-	end
-	
 	if CheckIfFile == true then
 		if isfile(FileName.."/"..GameName.."/"..Name) then
 
@@ -400,6 +151,25 @@ else
 	F.Name = "Clones/Ne_KO_HUB"
 	CloneFolder = F
 end
+
+-- Global variables for mob farming
+local LastMob = nil -- Tracks the current target mob for consistent farming
+
+-- Melee hit variables (from working script)
+local function getswordArgName()
+    for i, v in next, getgc(true) do
+        if type(v) == "table" and rawget(v, "hitUnit") then
+            for index, value in next, v do
+                if index ~= "hitUnit" then
+                    return index
+                end
+            end
+        end
+    end
+end
+local attemptHit = getscriptclosure(game:GetService("ReplicatedStorage").TS.tool.tools.sword)
+local attemptHitName = getswordArgName()
+local attemptHitValue = getconstant(attemptHit, 75)..getconstant(attemptHit, 76)
 
 function DeleteIsland(PASSWORD)
 	if PASSWORD == "UI NB)QUN BGTUI(O $ I)ONHZIO$NUI GOH)U$UB GZ)($NZOU IGHN$)(TMI)(O)" then 
@@ -525,7 +295,7 @@ function TweenHello()
 	Label.Position = UDim2.new(0.273145556, 0, 0, 0)
 	Label.Size = UDim2.new(0, 167, 0, 35)
 	Label.Font = Enum.Font.SourceSansBold
-	Label.Text = "Neko Hub V4"
+	Label.Text = "EdHub v4"
 	Label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Label.TextSize = 28.000
 
@@ -637,71 +407,34 @@ function Remotes()
 	if IsFolder("/Hash System") and IsFile("Game Version") and ReadFile("Game Version") and game.PlaceVersion == tonumber(ReadFile("Game Version")) then
 		print("Ist Nicht geupdated!")
 
-		-- Only read files if they exist
-		if IsFile("/Hash System/KillRemote") then
-			UpdateRemote("KillRemote", ReadFile("/Hash System/KillRemote")) -- 2
-		end
-		if IsFile("/Hash System/KillRemoteHashName") then
-			UpdateRemote("KillRemoteHashName", ReadFile("/Hash System/KillRemoteHashName")) -- 2
-		end
-		if IsFile("/Hash System/KillRemoteHash") then
-			_G.KillRemoteHash = ReadFile("/Hash System/KillRemoteHash")
-		end
+		UpdateRemote("KillRemote", ReadFile("/Hash System/KillRemote")) -- 2
+		UpdateRemote("KillRemoteHashName", ReadFile("/Hash System/KillRemoteHashName")) -- 2
+		_G.KillRemoteHash = ReadFile("/Hash System/KillRemoteHash")
 
-		if IsFile("/Hash System/FishFarmFinishRemote") then
-			UpdateRemote("FishFarmFinishRemote", ReadFile("/Hash System/FishFarmFinishRemote")) -- 2
-		end
-		if IsFile("/Hash System/AngelRemote") then
-			UpdateRemote("AngelRemote", ReadFile("/Hash System/AngelRemote")) -- 2
-		end
+		UpdateRemote("FishFarmFinishRemote", ReadFile("/Hash System/FishFarmFinishRemote")) -- 2
+		UpdateRemote("AngelRemote", ReadFile("/Hash System/AngelRemote")) -- 2
 
-		if IsFile("/Hash System/TOOL_PICKUPHashData") then
-			UpdateRemote("TOOL_PICKUPHashData", ReadFile("/Hash System/TOOL_PICKUPHashData")) -- 2
-		end
-		if IsFile("/Hash System/TOOL_PICKUPHash") then
-			_G.TOOL_PICKUPHash = ReadFile("/Hash System/TOOL_PICKUPHash")
-		end
+		UpdateRemote("TOOL_PICKUPHashData", ReadFile("/Hash System/TOOL_PICKUPHashData")) -- 2
+		_G.TOOL_PICKUPHash = ReadFile("/Hash System/TOOL_PICKUPHash")
 
-		if IsFile("/Hash System/CropHashData") then
-			UpdateRemote("CropHashData", ReadFile("/Hash System/CropHashData")) -- 2
-		end
-		if IsFile("/Hash System/CropHash") then
-			_G.CropHash = ReadFile("/Hash System/CropHash")
-		end
+		UpdateRemote("CropHashData", ReadFile("/Hash System/CropHashData")) -- 2
+		_G.CropHash = ReadFile("/Hash System/CropHash")
 
-		if IsFile("/Hash System/TreeHashData") then
-			UpdateRemote("TreeHashData", ReadFile("/Hash System/TreeHashData")) -- 2
-		end
-		if IsFile("/Hash System/TreeHash") then
-			_G.TreeHash = ReadFile("/Hash System/TreeHash")
-		end
-		if IsFile("/Hash System/BlockHitHashData") then
-			UpdateRemote("BlockHitHashData", ReadFile("/Hash System/BlockHitHashData")) -- 2
-		end
-		if IsFile("/Hash System/BlockHitHash") then
-			_G.BlockHitHash = ReadFile("/Hash System/BlockHitHash")
-		end
+		UpdateRemote("TreeHashData", ReadFile("/Hash System/TreeHashData")) -- 2
+		_G.TreeHash = ReadFile("/Hash System/TreeHash")
+		UpdateRemote("BlockHitHashData", ReadFile("/Hash System/BlockHitHashData")) -- 2
+		_G.BlockHitHash = ReadFile("/Hash System/BlockHitHash")
 
 		UpdateRemote("FlowerCollect", "client_request_1") -- 1
 		UpdateRemote("PetCollect", "CLIENT_PET_ANIMAL")
 		UpdateRemote("BlockRemote", "CLIENT_BLOCK_HIT_REQUEST")
 		UpdateRemote("SpiritRemote", "nflutpppqsFS/ZroaqkcspgrTkvpnkrdWcc")
 
-		if IsFile("/Hash System/CropPlaceHashData") then
-			UpdateRemote("CropPlaceHashData", ReadFile("/Hash System/CropPlaceHashData")) -- 2
-		end
-		if IsFile("/Hash System/CropPlaceHash") then
-			_G.CropPlaceHash = ReadFile("/Hash System/CropPlaceHash") -- 2
-		end
-		if IsFile("/Hash System/BlockPlaceHashData") then
-			_G.CropPlaceH1 = ReadFile("/Hash System/BlockPlaceHashData")
-		end
-		if IsFile("/Hash System/BlockPlaceHashData") then
-			UpdateRemote("BlockPlaceHashData", ReadFile("/Hash System/BlockPlaceHashData")) -- 2
-		end
-		if IsFile("/Hash System/BlockPlaceHash") then
-			_G.BlockPlaceHash = ReadFile("/Hash System/BlockPlaceHash") -- 2
-		end
+		UpdateRemote("CropPlaceHashData", ReadFile("/Hash System/CropPlaceHashData")) -- 2
+		_G.CropPlaceHash = ReadFile("/Hash System/CropPlaceHash") -- 2
+		_G.CropPlaceH1 = ReadFile("/Hash System/BlockPlaceHashData") 
+		UpdateRemote("BlockPlaceHashData", ReadFile("/Hash System/BlockPlaceHashData")) -- 2
+		_G.BlockPlaceHash = ReadFile("/Hash System/BlockPlaceHash") -- 2
 
 	else
 
@@ -768,7 +501,7 @@ function Remotes()
 				if mobramsides and mobramsides[1] and mobramsides[2] then
 					mobRemoteName = mobramsides[1].."/"..mobramsides[2]
 					if MOBRIGHT then
-						_G.KillRemoteHash = tostring(MOBRIGHT)
+						_G.KillRemoteHash = MOBRIGHT
 					else
 						_G.KillRemoteHash = nil
 					end 
@@ -985,7 +718,7 @@ function Remotes()
 			SendNotification("[SECURITY]", "Check 8/42 Done!")
 			UpdateRemote("KillRemoteHashName", MOBLEFT) -- 2
 			SendNotification("[SECURITY]", "Check 9/42 Done!")
-			_G.KillRemoteHash = tostring(MOBRIGHT)
+			_G.KillRemoteHash = MOBRIGHT
 
 			print("Debug 1")
 
@@ -995,7 +728,7 @@ function Remotes()
 			SendNotification("[SECURITY]", "Check 10/42 Done!")
 			CreateFile("/Hash System/KillRemoteHashName", MOBLEFT, false)
 			SendNotification("[SECURITY]", "Check 11/42 Done!")
-			CreateFile("/Hash System/KillRemoteHash", tostring(MOBRIGHT or _G.KillRemoteHash), false)
+			CreateFile("/Hash System/KillRemoteHash", MOBRIGHT or _G.KillRemoteHash, false)
 			SendNotification("[SECURITY]", "Check 12/42 Done!")
 
 			print("Debug 2")
@@ -1254,19 +987,19 @@ local CANUSEAUTOCLICKER = true
 
 
 
-local MotHitH1 = RemoteData:FindFirstChild("KillRemoteHashName") and RemoteData:FindFirstChild("KillRemoteHashName").Value or ""
+local MotHitH1 = RemoteData:FindFirstChild("KillRemoteHashName").Value
 local MotHitH2 = _G.KillRemoteHash 
 
-local CropPlaceH1 = RemoteData:FindFirstChild("CropPlaceHashData") and RemoteData:FindFirstChild("CropPlaceHashData").Value or ""
+local CropPlaceH1 = RemoteData:FindFirstChild("CropPlaceHashData").Value
 local CropPlaceH2 = _G.CropPlaceHash
 
-local PickupH1 = RemoteData:FindFirstChild("TOOL_PICKUPHashData") and RemoteData:FindFirstChild("TOOL_PICKUPHashData").Value or ""
+local PickupH1 = RemoteData:FindFirstChild("TOOL_PICKUPHashData").Value
 local PickupH2 = _G.TOOL_PICKUPHash
 
-local PlaceHASHName = RemoteData:FindFirstChild("BlockPlaceHashData") and RemoteData:FindFirstChild("BlockPlaceHashData").Value or ""
+local PlaceHASHName = RemoteData:FindFirstChild("BlockPlaceHashData").Value
 local PlaceHASH = _G.BlockPlaceHash
 
-local HitHASHName = RemoteData:FindFirstChild("BlockHitHashData") and RemoteData:FindFirstChild("BlockHitHashData").Value or ""
+local HitHASHName = RemoteData:FindFirstChild("BlockHitHashData").Value
 local HitHASH = _G.BlockHitHash
 
 
@@ -1808,12 +1541,12 @@ if DeveloperVersion == false then
 	if DidKey == true then
 		Window = Fluent:CreateWindow({
 			Title = "Islands.God "..ScriptVersion.." [FREE!] "..holidayMessage,
-			SubTitle = "by NtOpenProcess and soldo_io", -- neverloseyoursmile_88
+			SubTitle = "by eddy36 and l2f", -- neverloseyoursmile_88
 			TabWidth = 160,
 			Size = UDim2.fromOffset(580, 460),
 			Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
 			Theme = "Dark",
-			MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+			MinimizeKey = Enum.KeyCode.RightControl -- Used when theres no MinimizeKeybind
 		})
 
 		Tabs = {
@@ -1832,12 +1565,12 @@ if DeveloperVersion == false then
 
 		Window = Fluent:CreateWindow({
 			Title = "Islands.God "..ScriptVersion.." [Premium!] "..holidayMessage,
-			SubTitle = "by NtOpenProcess and soldo_io", -- neverloseyoursmile_88
+			SubTitle = "by eddy36 and l2f", -- neverloseyoursmile_88
 			TabWidth = 160,
 			Size = UDim2.fromOffset(580, 460),
 			Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
 			Theme = "Dark",
-			MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+			MinimizeKey = Enum.KeyCode.RightControl -- Used when theres no MinimizeKeybind
 		})
 
 		Tabs = {
@@ -1853,19 +1586,19 @@ if DeveloperVersion == false then
 	end
 else
 	Window = Fluent:CreateWindow({
-		Title = "Islands.God "..ScriptVersion.." [Developer!] "..holidayMessage,
-		SubTitle = "by NtOpenprocess and soldo_io", -- neverloseyoursmile_88
+		Title = "EdHub "..ScriptVersion.." [OWNER!] "..holidayMessage,
+		SubTitle = "By eddy36 and l2f", -- neverloseyoursmile_88
 		TabWidth = 160,
 		Size = UDim2.fromOffset(580, 460),
 		Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
 		Theme = "Dark",
-		MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+		MinimizeKey = Enum.KeyCode.RightControl -- Used when theres no MinimizeKeybind
 	})
 
 	Tabs = {
 		Main = Window:AddTab({ Title = "Main", Icon = "sword" }),
 		Teleports = Window:AddTab({ Title = "Teleports", Icon = "bus" }),
-		BlockPrinter = Window:AddTab({ Title = "Block Printer", Icon = "printer" }),
+		BlockPrinter = Window:AddTab({ Title = "Build Stealer", Icon = "printer" }),
 		Player = Window:AddTab({ Title = "Player", Icon = "PlayerIcon" }),
 		VendingSniper = Window:AddTab({ Title = "Vending Sniper", Icon = "file-search" }),
 		BypassFun = Window:AddTab({ Title = "Bypass.Fun", Icon = "server" }),
@@ -2461,37 +2194,43 @@ function FarmMob(V)
 	DebugCheck(0,"FarmMob")
 	local SelectedMob
 
-	local MobsToScan = {}
-	if V == true then
-		SelectedMob = game:GetService("Workspace").WildernessIsland.Entities:FindFirstChild(_G.SelectedBoss)
+	-- Check if we already have a target mob that's still alive
+	if LastMob and LastMob.Parent and LastMob:FindFirstChild("HumanoidRootPart") then
+		SelectedMob = LastMob
+		print("FarmMob: Continuing with previous target:", SelectedMob.Name)
 	else
-
-
-		for i,v in pairs(game:GetService("Workspace").WildernessIsland.Entities:GetChildren()) do
-			if v and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-				print("HUMANOID/ROOTAPRT")
-				if type(_G.SelectedMob) == "table" then
-					for i,x in pairs(_G.SelectedMob) do
-						if v.Name == x then
+		-- Find a new target mob
+		LastMob = nil
+		local MobsToScan = {}
+		if V == true then
+			SelectedMob = game:GetService("Workspace").WildernessIsland.Entities:FindFirstChild(_G.SelectedBoss)
+		else
+			for i,v in pairs(game:GetService("Workspace").WildernessIsland.Entities:GetChildren()) do
+				if v and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+					print("HUMANOID/ROOTAPRT")
+					if type(_G.SelectedMob) == "table" then
+						for i,x in pairs(_G.SelectedMob) do
+							if v.Name == x then
+								print("ADDED!",v.Name)
+								table.insert(MobsToScan, v)
+							else
+								print("x ist:",x.." Mob heißt:",v)
+							end
+						end
+					else
+						if v.Name == _G.SelectedMob then
 							print("ADDED!",v.Name)
 							table.insert(MobsToScan, v)
 						else
-							print("x ist:",x.." Mob heißt:",v)
+							print(v.Name)
 						end
-					end
-				else
-					if v.Name == _G.SelectedMob then
-						print("ADDED!",v.Name)
-						table.insert(MobsToScan, v)
-					else
-						print(v.Name)
 					end
 				end
 			end
-		end
 
-		SelectedMob = findNearestMob(MobsToScan)
-		print("NEWMOB:",SelectedMob)
+			SelectedMob = findNearestMob(MobsToScan)
+			print("NEWMOB:",SelectedMob)
+		end
 	end
 	if SelectedMob ~= nil and SelectedMob then
 
@@ -2633,14 +2372,26 @@ function FarmMob(V)
 								}
 							}
 
+							-- Get the remote event and check if it exists
+							local remoteEvent = nil
+							local remoteName = RemoteData:FindFirstChild("KillRemote")
+							if remoteName then
+								remoteEvent = game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged:FindFirstChild(remoteName.Value)
+							end
+							
+							if not remoteEvent then
+								print("FarmMob: Remote event not found! Remote name:", remoteName and remoteName.Value or "nil")
+								return
+							end
+							
 							if  _G.ragebladeMobFarm == true  then
 								for i = 1,50 do
-									game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged:FindFirstChild(RemoteData:FindFirstChild("KillRemote").Value):FireServer(unpack(args))
+									remoteEvent:FireServer(unpack(args))
 									task.wait()
 								end
 							else
 								for i = 1,5 do
-									game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged:FindFirstChild(RemoteData:FindFirstChild("KillRemote").Value):FireServer(unpack(args))
+									remoteEvent:FireServer(unpack(args))
 									task.wait(0.3)
 								end
 							end
@@ -3298,10 +3049,7 @@ function IslandRockFarm(RockArt)
 						["norm"] = Vector3.new(v.CFrame),
 						["pos"] = v.Position
 					}
-					local blockRemote = RemoteData:FindFirstChild("BlockRemote")
-					if blockRemote then
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged:FindFirstChild(blockRemote.Value):InvokeServer(ohTable1)
-					end
+					game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged:FindFirstChild(RemoteData:FindFirstChild("BlockRemote").Value):InvokeServer(ohTable1)
 				else
 					v = nil 
 				end
@@ -3316,10 +3064,7 @@ function IslandRockFarm(RockArt)
 						["norm"] = Vector3.new(v.CFrame),
 						["pos"] = v.Position
 					}
-					local blockRemote = RemoteData:FindFirstChild("BlockRemote")
-					if blockRemote then
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged:FindFirstChild(blockRemote.Value):InvokeServer(ohTable1)
-					end
+					game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged:FindFirstChild(RemoteData:FindFirstChild("BlockRemote").Value):InvokeServer(ohTable1)
 				else
 					v = nil
 				end
@@ -3863,85 +3608,120 @@ end
 local KILLAURA_COOLDOWN = false
 local BypassedSowrd = false
 local ANTICONSOLEWARNLOGANIMATION2 = false
+
+-- Cleanup function for when game is closing
+local function cleanupKillAura()
+	KILLAURA_COOLDOWN = false
+	_G.MobKillAura = false
+end
+
+-- Connect cleanup to game closing using a different method
+game.Players.LocalPlayer.AncestryChanged:Connect(function()
+	if not game.Players.LocalPlayer.Parent then
+		cleanupKillAura()
+	end
+end)
 function KillAura()
+	print("KillAura: Function called")
+	
+	-- Check if KillAura is enabled first
+	if not _G.MobKillAura then
+		print("KillAura: _G.MobKillAura is false, returning")
+		return
+	end
+	
+	-- Check if game is still running
+	if not game:GetService("RunService"):IsRunning() then
+		return
+	end
+	
 	if KILLAURA_COOLDOWN == false then
 		KILLAURA_COOLDOWN = true
+	else
+		return
+	end
+
+	-- Use pcall to catch any errors and reset cooldown
+	local success, error = pcall(function()
+		-- Check if player character exists
+		if not game.Players.LocalPlayer.Character or not game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			return
+		end
+		
+		-- Suppress console errors to reduce spam
+		local oldError = error
+		local oldWarn = warn
+		error = function(...) end
+		warn = function(...) end
+
+		-- Check if remote data exists
+		if not RemoteData or not RemoteData:FindFirstChild("KillRemote") or not RemoteData:FindFirstChild("KillRemoteHashName") then
+			return
+		end
+
+		-- Check if hash values exist
+		if not MotHitH1 or not MotHitH2 then
+			return
+		end
 
 		if BypassedSowrd == false then
 			if _G.ragebladeMobFarm == true then
 				DebugCheck(0,"ragebladeMobFarm")
-				local aux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
+				local success, result = pcall(function()
+					local aux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
 
-				local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChild("rageblade")
-				if Tool then
-					local scriptPath = Tool:FindFirstChild("rageblade") -- Hier ist der error von Gestern.
-					local closureName = "Unnamed function"
-					local upvalueIndex = 1
-					local closureConstants = {
-						[1] = "isHitting",
-						[2] = "getLivingEntityFromChildPart",
-						[3] = "attemptHit"
-					}
+					local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChild("rageblade")
+					if Tool then
+						local scriptPath = Tool:FindFirstChild("rageblade")
+						local closureName = "Unnamed function"
+						local upvalueIndex = 1
+						local closureConstants = {
+							[1] = "isHitting",
+							[2] = "getLivingEntityFromChildPart",
+							[3] = "attemptHit"
+						}
 
-					local closure = aux.searchClosure(scriptPath, closureName, upvalueIndex, closureConstants)
-					local value = 0
-					local elementIndex = "lastClicked"
+						local closure = aux.searchClosure(scriptPath, closureName, upvalueIndex, closureConstants)
+						local value = 0
+						local elementIndex = "lastClicked"
 
+						-- DO NOT RELY ON THIS FEATURE TO PRODUCE 100% FUNCTIONAL SCRIPTS
+						game:GetService("RunService").RenderStepped:Connect(function()
+							debug.getupvalue(closure, upvalueIndex)[elementIndex] = value
+						end)
+					end
 
-					-- DO NOT RELY ON THIS FEATURE TO PRODUCE 100% FUNCTIONAL SCRIPTS
-					game:GetService("RunService").RenderStepped:Connect(function()
+					-- Generated by Hydroxide's Upvalue Scanner: https://github.com/Upbolt/Hydroxide
+
+					local aux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
+
+					local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChild("rageblade")
+					if Tool then
+						local scriptPath = Tool:FindFirstChild("rageblade")
+						local closureName = "Unnamed function"
+						local upvalueIndex = 1
+						local closureConstants = {
+							[1] = "isHitting",
+							[2] = "getLivingEntityFromChildPart",
+							[3] = "attemptHit"
+						}
+
+						local closure = aux.searchClosure(scriptPath, closureName, upvalueIndex, closureConstants)
+						local value = 4
+						local elementIndex = "speed"
+
 						debug.getupvalue(closure, upvalueIndex)[elementIndex] = value
-					end)
-				end
 
-				-- Generated by Hydroxide's Upvalue Scanner: https://github.com/Upbolt/Hydroxide
-
-				local aux = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ohaux.lua"))()
-
-				local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChild("rageblade")
-				if Tool then
-					local scriptPath = Tool:FindFirstChild("rageblade") -- Hier ist der error von Gestern.
-					local closureName = "Unnamed function"
-					local upvalueIndex = 1
-					local closureConstants = {
-						[1] = "isHitting",
-						[2] = "getLivingEntityFromChildPart",
-						[3] = "attemptHit"
-					}
-
-					local closure = aux.searchClosure(scriptPath, closureName, upvalueIndex, closureConstants)
-					local value = 4
-					local elementIndex = "speed"
-
-
-					debug.getupvalue(closure, upvalueIndex)[elementIndex] = value
-
-					BypassedSowrd = true
-				end
-
+						BypassedSowrd = true
+					end
+				end)
+				
 			end
 		end
 
-		if ANTICONSOLEWARNLOGANIMATION2 == false then
-			ANTICONSOLEWARNLOGANIMATION2 = true
-			task.spawn(function()
-				for i,v in pairs(game:GetService('Players'):GetChildren()) do
-					if v and v.Character and v.Character:FindFirstChild("Humanoid") then
-						Player = v.Name
-						AnimationId = "5328169716"
-						local Anim = Instance.new("Animation")
-						Anim.AnimationId = "rbxassetid://"..AnimationId
-						local k = game.Players[Player].Character.Humanoid:LoadAnimation(Anim)
-						k:Play() --Play the animation
-						k:AdjustSpeed(0)
-					end
-				end
-				wait(5)
-				ANTICONSOLEWARNLOGANIMATION2 = false
-			end)
-		end	
-
-		-- game.Players.LocalPlayer.Character:MoveTo(NM:FindFirstChild("HumanoidRootPart").Position)
+		-- Get currently equipped weapon
+		local currentWeapon = game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+		print("KillAura: Weapon equipped:", currentWeapon and currentWeapon.Name or "none")
 
 		local function findNearestMob(A)
 			closestPart = nil
@@ -3951,7 +3731,7 @@ function KillAura()
 			Table = A
 
 			for i, part in ipairs(Table) do
-				if part:FindFirstChild("HumanoidRootPart") then
+				if part and part:FindFirstChild("HumanoidRootPart") then
 					local distance = (part:FindFirstChild("HumanoidRootPart").Position - playerPosition).magnitude
 					if distance < closestDistance then
 						closestPart = part
@@ -3963,23 +3743,219 @@ function KillAura()
 			return closestPart
 		end
 
-		local Mobs = workspace.WildernessIsland.Entities:GetChildren()
+		-- Check if WildernessIsland exists, if not try alternative paths
+		local Mobs = {}
+		if workspace:FindFirstChild("WildernessIsland") and workspace.WildernessIsland:FindFirstChild("Entities") then
+			Mobs = workspace.WildernessIsland.Entities:GetChildren()
+		elseif workspace:FindFirstChild("WildernessIsland") then
+			-- Try to find entities in other locations
+			for _, child in pairs(workspace.WildernessIsland:GetChildren()) do
+				if child:FindFirstChild("Entities") then
+					Mobs = child.Entities:GetChildren()
+					break
+				end
+			end
+		else
+			-- Try to find mobs in workspace directly
+			for _, child in pairs(workspace:GetChildren()) do
+				if child:FindFirstChild("Entities") then
+					Mobs = child.Entities:GetChildren()
+					break
+				end
+			end
+		end
 
-		SelectedMob = findNearestMob(Mobs)
+		-- Filter mobs based on selected mob from main tab
+		local FilteredMobs = {}
+		if _G.SelectedMob then
+			print("KillAura: Filtering for selected mob:", _G.SelectedMob)
+			
+			if type(_G.SelectedMob) == "table" then
+				-- Handle multiple selected mobs
+				for _, mob in pairs(Mobs) do
+					if mob and mob:FindFirstChild("HumanoidRootPart") and mob.PrimaryPart and mob.PrimaryPart.Parent then
+						for _, selectedMobName in pairs(_G.SelectedMob) do
+							if mob.Name == selectedMobName then
+								table.insert(FilteredMobs, mob)
+								break
+							end
+						end
+					end
+				end
+			else
+				-- Handle single selected mob
+				for _, mob in pairs(Mobs) do
+					if mob and mob:FindFirstChild("HumanoidRootPart") and mob.PrimaryPart and mob.PrimaryPart.Parent and mob.Name == _G.SelectedMob then
+						table.insert(FilteredMobs, mob)
+					end
+				end
+			end
+		else
+			-- If no mob selected, use all mobs with proper validation
+			for _, mob in pairs(Mobs) do
+				if mob and mob:FindFirstChild("HumanoidRootPart") and mob.PrimaryPart and mob.PrimaryPart.Parent then
+					table.insert(FilteredMobs, mob)
+				end
+			end
+		end
 
-		local args = {
-			[1] = Hash(),
-			[2] = {
-				[1] = {
-					[MotHitH1] = MotHitH2,
-					["hitUnit"] = SelectedMob
-				}
-			}
-		}
+		-- Get the remote event using the same method as the other script
+		local RemotePathMain = game:GetService("ReplicatedStorage"):FindFirstChild("rbxts_include")
+		if RemotePathMain then
+			RemotePathMain = RemotePathMain:FindFirstChild("node_modules")
+			if RemotePathMain then
+				RemotePathMain = RemotePathMain:FindFirstChild("@rbxts")
+				if RemotePathMain then
+					RemotePathMain = RemotePathMain:FindFirstChild("net")
+					if RemotePathMain then
+						RemotePathMain = RemotePathMain:FindFirstChild("out")
+						if RemotePathMain then
+							RemotePathMain = RemotePathMain:FindFirstChild("_NetManaged")
+						end
+					end
+				end
+			end
+		end
+		
+		if not RemotePathMain then
+			print("KillAura: RemotePathMain not found!")
+			KILLAURA_COOLDOWN = false
+			return
+		end
+		
+		-- Use the exact same method as the other script - try to find the correct remote
+		local MeleeRemote = nil
+		
+		-- List all remotes to find the correct one
+		print("KillAura: Available remotes:")
+		for _, child in pairs(RemotePathMain:GetChildren()) do
+			if child:IsA("RemoteEvent") then
+				print("  -", child.Name)
+			end
+		end
+		
+		-- Try to find a melee-specific remote first
+		for _, child in pairs(RemotePathMain:GetChildren()) do
+			if child:IsA("RemoteEvent") and 
+			   (string.find(child.Name:lower(), "melee") or 
+			    string.find(child.Name:lower(), "sword") or
+			    string.find(child.Name:lower(), "weapon")) and
+			   not string.find(child.Name:lower(), "projectile") and
+			   not string.find(child.Name:lower(), "block") then
+				MeleeRemote = child.Name
+				print("KillAura: Found melee remote:", child.Name)
+				break
+			end
+		end
+		
+		-- If no melee remote found, try general combat remotes
+		if not MeleeRemote then
+			for _, child in pairs(RemotePathMain:GetChildren()) do
+				if child:IsA("RemoteEvent") and 
+				   (string.find(child.Name:lower(), "combat") or 
+				    string.find(child.Name:lower(), "hit") or
+				    string.find(child.Name:lower(), "attack")) and
+				   not string.find(child.Name:lower(), "projectile") and
+				   not string.find(child.Name:lower(), "block") then
+					MeleeRemote = child.Name
+					print("KillAura: Found combat remote:", child.Name)
+					break
+				end
+			end
+		end
+		
+		if not MeleeRemote then
+			print("KillAura: No combat remote found!")
+			KILLAURA_COOLDOWN = false
+			return
+		end
+		
+		-- Check if player has a weapon equipped
+		if not currentWeapon then
+			return -- No weapon equipped, skip KillAura
+		end
+		
+		-- Hit multiple mobs at once
+		print("KillAura: Found", #FilteredMobs, "mobs to hit")
+		if #FilteredMobs > 0 then
+			
+			local totalHits = 0
+			local maxHitsPerMob = 5 -- Hits per mob per activation
+			local maxRounds = 3 -- Number of rounds to hit all mobs
+			
+			for round = 1, maxRounds do
+				for _, mob in pairs(FilteredMobs) do
+					-- Better mob validation to avoid PrimaryPart errors
+					if mob and mob.Parent and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and 
+					   mob.PrimaryPart and mob.PrimaryPart.Parent and mob:FindFirstChild("Head") then
+						-- Check if we still have a weapon equipped
+						local equippedWeapon = game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+						if not equippedWeapon then
+							return -- No weapon equipped, stop KillAura
+						end
+						
+						-- Hit this specific mob
+						for hit = 1, maxHitsPerMob do
+							if mob and mob.Parent and mob:FindFirstChild("HumanoidRootPart") and mob.PrimaryPart and mob.PrimaryPart.Parent then
+								-- Use the simpler approach from the other script
+								print("KillAura: Attempting to hit", mob.Name, "with", equippedWeapon.Name)
+								if equippedWeapon then
+									-- Simulate mouse click like the other script
+									pcall(function()
+										game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, game, 1)
+										game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, false, game, 1)
+									end)
+									
+									-- Use the exact same arguments as the working script
+									local args = {
+										[1] = HashGen(),
+										[2] = {
+											[1] = {
+												[attemptHitName] = attemptHitValue,
+												["hitUnit"] = mob
+											}
+										}
+									}
 
-		game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged:FindFirstChild(RemoteData:FindFirstChild("KillRemote").Value):FireServer(unpack(args))
-
-		task.wait(0.4)
+									local success, result = pcall(function()
+										RemotePathMain:WaitForChild(MeleeRemote):FireServer(unpack(args))
+									end)
+									
+									if success then
+										totalHits = totalHits + 1
+										print("KillAura: Successfully hit", mob.Name, "(" .. totalHits .. " hits)")
+									else
+										print("KillAura: Failed to hit", mob.Name, "-", result)
+									end
+								end
+								
+								-- Very short delay between hits on same mob
+								task.wait(0.05)
+							else
+								break
+							end
+						end
+						
+						-- Short delay between different mobs
+						task.wait(0.1)
+					end
+				end
+				
+				-- Delay between rounds
+				task.wait(0.2)
+			end
+			
+		task.wait(0.1)
+		KILLAURA_COOLDOWN = false
+		
+		-- Restore error and warn functions
+		error = oldError
+		warn = oldWarn
+	end
+	end)
+	
+	-- Handle any errors and reset cooldown
+	if not success then
 		KILLAURA_COOLDOWN = false
 	end
 end
@@ -5192,13 +5168,23 @@ GenInfos()
 	end)
 
 
-	local MobKillAuraToggle = MobSelection:AddToggle("MobKillAuraToggle", {Title = "Mob Kill Aura", Default = false })
+	local MobKillAuraToggle = MobSelection:AddToggle("MobKillAuraToggle", {Title = "Mob Kill Aura", Description = "For this to work you need to hold out a weapon.", Default = false })
 
 	MobKillAuraToggle:OnChanged(function()
+		-- Use pcall to prevent errors from blocking the toggle
+		pcall(function()
+			local Value = Options.MobKillAuraToggle.Value
+			print("MobKillAura Toggle changed to:", Value)
 
-		local Value = Options.MobKillAuraToggle.Value
-
-		_G.MobKillAura = Value
+			_G.MobKillAura = Value
+			print("_G.MobKillAura set to:", _G.MobKillAura)
+			
+			-- Reset cooldown when disabled to stop KillAura immediately
+			if not Value then
+				KILLAURA_COOLDOWN = false
+				print("KillAura: Disabled and cooldown reset")
+			end
+		end)
 	end)
 
 	local MobUseRagebladeToggle = MobSelection:AddToggle("MobUseRagebladeToggle", {Title = "Use Rageblade for Mob Auto Farm", Default = false })
@@ -6899,10 +6885,29 @@ end
 				["blockType"] = ToLace,
 				["upperBlock"] = false
 			}
-			if _G.BlockPrinterTP == true then
-				TeleportV4(position + Vector3.new(0,10,0))
+			
+			-- NO TELEPORTATION - Player must walk manually
+			-- Removed: if _G.BlockPrinterTP == true then TeleportV4(position + Vector3.new(0,10,0)) end
+			
+			-- Use pcall to handle network errors gracefully
+			local success, result = pcall(function()
+				game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.CLIENT_BLOCK_PLACE_REQUEST:InvokeServer(args)
+			end)
+			
+			if not success then
+				warn("Block placement failed:", result)
 			end
-			game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.CLIENT_BLOCK_PLACE_REQUEST:InvokeServer(args)
+			
+			-- Dynamic delay based on ping
+			local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+			local delay = 0.05
+			if ping > 200 then
+				delay = 0.15 -- Longer delay for high ping
+			elseif ping > 100 then
+				delay = 0.1
+			end
+			
+			task.wait(delay)
 		end
 
 		if not game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then Message("WARNING!","Please Hold the Block you want to Place!", "Okay!", 3) return nil end 
@@ -6942,9 +6947,10 @@ end
 			end
 		end
 
-		if _G.BlockPrinterTP == true then
-			sFLY(true)
-		end
+		-- Removed automatic flying - player must walk manually
+		-- if _G.BlockPrinterTP == true then
+		-- 	sFLY(true)
+		-- end
 
 		local positions = {}
 
@@ -6977,345 +6983,81 @@ end
 			BlockPlaceCount = BlockPlaceCount + 1
 		end
 
-		task.spawn(function()
-			if positions[1] then
-				TeleportV4(positions[1] + Vector3.new(0,15,0))
-				PlaceBlock(positions[1], ToLace, PlaceHASHName, PlaceHASH)
-			end
-		end)
+		-- Removed initial teleportation - player must walk manually
+		-- task.spawn(function()
+		-- 	if positions[1] then
+		-- 		TeleportV4(positions[1] + Vector3.new(0,15,0))
+		-- 		PlaceBlock(positions[1], ToLace, PlaceHASHName, PlaceHASH)
+		-- 	end
+		-- end)
 
 		DebugCheck(0,"To Place: "..BlockPlaceCount)
 
-		if _G.BlockPrinterTP == true then
-			game.Players.LocalPlayer.Character:MoveTo(game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0,10,0))
-		end
+		-- Removed automatic movement - player must walk manually
+		-- if _G.BlockPrinterTP == true then
+		-- 	game.Players.LocalPlayer.Character:MoveTo(game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0,10,0))
+		-- end
 
 		task.wait(2)
 
-		-- Anti-detection: Shuffle positions to avoid predictable patterns
-		local function shuffleTable(t)
-			local shuffled = {}
-			local indices = {}
-			for i = 1, #t do
-				indices[i] = i
-			end
-			for i = #indices, 1, -1 do
-				local j = math.random(i)
-				indices[i], indices[j] = indices[j], indices[i]
-			end
-			for i = 1, #indices do
-				shuffled[i] = t[indices[i]]
-			end
-			return shuffled
-		end
-		
-		positions = shuffleTable(positions)
-		
-		-- Advanced Anti-Detection: Process blocks with human-like patterns and safety measures
-		local processedBlocks = 0
-		local maxBlocksPerSession = _G.BlockPrinterSafetyMode and math.random(5, 10) or math.random(15, 25) -- Much lower limit in safety mode
-		local sessionCooldown = _G.BlockPrinterSafetyMode and math.random(60, 120) or math.random(30, 60) -- Longer cooldown in safety mode
-		
-		-- Log block printer session start
-		LoggingSystem:Log("INFO", "Block printer session started", {
-			TotalPositions = #positions,
-			MaxBlocksPerSession = maxBlocksPerSession,
-			SessionCooldown = sessionCooldown,
-			SafetyMode = _G.BlockPrinterSafetyMode,
-			AdvancedBypass = _G.BlockPrinterAdvancedBypass,
-			TeleportEnabled = _G.BlockPrinterTP
-		})
-		
-		-- Advanced Bypass: Safe block placement function with error handling
-		local function safePlaceBlock(position, blockType, hashName, hash)
-			local blockPlacementStart = tick()
-			local success, err = pcall(function()
-				-- Log block placement attempt
-				LoggingSystem:Log("DEBUG", "Attempting block placement", {
-					Position = tostring(position),
-					BlockType = blockType,
-					HashName = hashName,
-					SafetyMode = _G.BlockPrinterSafetyMode,
-					AdvancedBypass = _G.BlockPrinterAdvancedBypass
-				})
-				
-				-- Anti-detection: Add random delay before placement
-				local delay = _G.BlockPrinterAdvancedBypass and math.random(20, 50) / 100 or math.random(10, 30) / 100
-				task.wait(delay)
-				
-				-- Advanced Bypass: Simulate human behavior using VirtualInputManager
-				if _G.BlockPrinterAdvancedBypass then
-					-- Simulate random mouse movement
-					if math.random(1, 3) == 1 then
-						local success2, err2 = pcall(function()
-							game:GetService("VirtualInputManager"):SendMouseMoveEvent(
-								math.random(200, 1000), 
-								math.random(200, 800)
-							)
-						end)
-						if not success2 then
-							LoggingSystem:Log("WARN", "Mouse simulation failed", {Error = err2})
-						end
-					end
-					
-					-- Simulate random key presses for more natural behavior
-					if math.random(1, 8) == 1 then
-						local success3, err3 = pcall(function()
-							local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.KeyCode.Space}
-							local randomKey = keys[math.random(1, #keys)]
-							
-							game:GetService("VirtualInputManager"):SendKeyEvent(true, randomKey, false, game)
-							task.wait(math.random(5, 20) / 1000)
-							game:GetService("VirtualInputManager"):SendKeyEvent(false, randomKey, false, game)
-						end)
-						if not success3 then
-							LoggingSystem:Log("WARN", "Key simulation failed", {Error = err3})
-						end
-					end
-				end
-				
-				-- Simulate human behavior before placing
-				if math.random(1, 5) == 1 then
-					-- Random camera movement
-					local camera = workspace.CurrentCamera
-					if camera then
-						camera.CFrame = camera.CFrame * CFrame.Angles(
-							math.rad(math.random(-5, 5)),
-							math.rad(math.random(-10, 10)),
-							0
-						)
-					end
-				end
-				
-				-- Place the block
-				PlaceBlock(position, blockType, hashName, hash)
-			end)
+		-- Optimized paste system to reduce lag and handle high ping
+		local function PlaceBlocksInRange()
+			local placedCount = 0
+			local maxBlocksPerFrame = 2 -- Reduced for high ping users
+			local delayBetweenBatches = 0.15 -- Increased delay for high ping
 			
-			local placementTime = tick() - blockPlacementStart
-			
-			if success then
-				LoggingSystem:Log("DEBUG", "Block placement successful", {
-					Position = tostring(position),
-					PlacementTime = placementTime,
-					BlockType = blockType
-				})
-				return true
-			else
-				LoggingSystem:Log("ERROR", "Block placement failed", {
-					Position = tostring(position),
-					Error = err,
-					PlacementTime = placementTime,
-					BlockType = blockType
-				})
-				-- Anti-detection: Longer pause on failure
-				task.wait(math.random(100, 300) / 100)
-				return false
-			end
-		end
-		
-		-- Anti-detection: Add random pauses to simulate human behavior
-		local function humanPause()
-			local pauseType = math.random(1, 4)
-			if _G.BlockPrinterSafetyMode then
-				-- Much longer pauses in safety mode
-				if pauseType == 1 then
-					task.wait(math.random(100, 300) / 100) -- Short pause (1-3s)
-				elseif pauseType == 2 then
-					task.wait(math.random(400, 800) / 100) -- Medium pause (4-8s)
-				elseif pauseType == 3 then
-					task.wait(math.random(1000, 2000) / 100) -- Long pause (10-20s)
-				end
-			else
-				-- Normal pauses
-				if pauseType == 1 then
-					task.wait(math.random(50, 150) / 100) -- Short pause
-				elseif pauseType == 2 then
-					task.wait(math.random(200, 400) / 100) -- Medium pause
-				elseif pauseType == 3 then
-					task.wait(math.random(500, 1000) / 100) -- Long pause
-				end
-			end
-		end
-		
-		-- Advanced Anti-detection: Simulate human input using VirtualInputManager
-		local function simulateHumanInput()
-			if math.random(1, 8) == 1 then -- 12.5% chance for more natural behavior
-				-- Simulate random mouse movement using VirtualInputManager
-				local success, err = pcall(function()
-					local mouse = game.Players.LocalPlayer:GetMouse()
-					local currentPos = mouse.Hit.Position
-					local randomOffset = Vector3.new(
-						math.random(-8, 8),
-						math.random(-3, 3),
-						math.random(-8, 8)
-					)
-					
-					-- Simulate mouse movement with VirtualInputManager
-					game:GetService("VirtualInputManager"):SendMouseMoveEvent(
-						math.random(100, 800), 
-						math.random(100, 600)
-					)
-				end)
-				
-				if not success then
-					warn("Mouse simulation failed:", err)
-				end
+			-- Get current ping to adjust delays dynamically
+			local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+			if ping > 200 then
+				maxBlocksPerFrame = 1 -- Very conservative for high ping
+				delayBetweenBatches = 0.25
+			elseif ping > 100 then
+				maxBlocksPerFrame = 2
+				delayBetweenBatches = 0.2
 			end
 			
-			-- Simulate occasional key presses for more human-like behavior
-			if math.random(1, 20) == 1 then -- 5% chance
-				local success, err = pcall(function()
-					-- Random key press simulation
-					local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D}
-					local randomKey = keys[math.random(1, #keys)]
-					
-					game:GetService("VirtualInputManager"):SendKeyEvent(true, randomKey, false, game)
-					task.wait(math.random(10, 50) / 1000) -- Very short press
-					game:GetService("VirtualInputManager"):SendKeyEvent(false, randomKey, false, game)
-				end)
-				
-				if not success then
-					warn("Key simulation failed:", err)
-				end
-			end
-		end
-		
-		for i = 1, _G.PlayerBlockPrinterSpeed do
 			for i, v in pairs(positions) do
-				if v and processedBlocks < maxBlocksPerSession then
-					task.spawn(function()
-						-- Advanced Anti-detection: Much longer random delays
-						local randomDelay = _G.BlockPrinterSafetyMode and math.random(100, 500) / 100 or math.random(50, 200) / 100
-						task.wait(randomDelay)
+				if v then
+					local dis = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v).Magnitude
+					if dis <= 30 then
+						-- Place block immediately if in range
+						PlaceBlock(v, ToLace, PlaceHASHName, PlaceHASH)
+						positions[i] = nil
+						placedCount = placedCount + 1
 						
-						-- Anti-detection: Simulate human behavior
-						simulateHumanInput()
-						
-						local dis = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v).Magnitude
-						
-						-- Anti-detection: Larger random offset to target position
-						local targetPos = v + Vector3.new(
-							math.random(-5, 5),
-							math.random(0, 3),
-							math.random(-5, 5)
-						)
-						
-						if dis > 30 then
-							if _G.BlockPrinterTP == true then
-								-- Log teleportation attempt
-								LoggingSystem:Log("DEBUG", "Teleportation required", {
-									CurrentPosition = tostring(game.Players.LocalPlayer.Character.HumanoidRootPart.Position),
-									TargetPosition = tostring(targetPos),
-									Distance = dis,
-									SafetyMode = _G.BlockPrinterSafetyMode
-								})
-								
-								-- Advanced Anti-detection: Sophisticated teleportation with error handling
-								local success, err = pcall(function()
-									TeleportV4(targetPos + Vector3.new(0, 15, 0))
-								end)
-								
-								if not success then
-									LoggingSystem:Log("ERROR", "Teleportation failed", {
-										Error = err,
-										TargetPosition = tostring(targetPos),
-										CurrentPosition = tostring(game.Players.LocalPlayer.Character.HumanoidRootPart.Position)
-									})
-									return
-								end
-								
-								local teleportAttempts = 0
-								local maxAttempts = _G.BlockPrinterSafetyMode and 15 or 10
-								
-								repeat 
-									-- Anti-detection: Variable wait times based on safety mode
-									local waitTime = _G.BlockPrinterSafetyMode and math.random(30, 80) / 100 or math.random(20, 50) / 100
-									task.wait(waitTime)
-									
-									-- Anti-detection: Add small random movement before teleporting
-									if math.random(1, 3) == 1 then
-										local character = game.Players.LocalPlayer.Character
-										if character and character:FindFirstChild("HumanoidRootPart") then
-											local smallOffset = Vector3.new(
-												math.random(-2, 2),
-												math.random(0, 1),
-												math.random(-2, 2)
-											)
-											character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame + smallOffset
-											task.wait(math.random(5, 15) / 100)
-										end
-									end
-									
-									local success2, err2 = pcall(function()
-										TeleportV4(targetPos + Vector3.new(0, 15, 0))
-									end)
-									
-									if not success2 then
-										warn("Teleportation retry failed:", err2)
-									end
-									
-									teleportAttempts = teleportAttempts + 1
-									
-									-- Anti-detection: Break if too many attempts
-									if teleportAttempts > maxAttempts then
-										break
-									end
-								until (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - targetPos).Magnitude < 30
-								
-								-- Advanced Anti-detection: Much longer wait before placing
-								humanPause()
-								task.wait(math.random(50, 150) / 100)
-								
-								if v then
-									-- Use safe block placement function
-									if safePlaceBlock(v, ToLace, PlaceHASHName, PlaceHASH) then
-										positions[i] = nil
-										processedBlocks = processedBlocks + 1
-										
-										-- Anti-detection: Random pause after each block
-										humanPause()
-									end
-								end
-							else
-								-- Advanced Anti-detection: Much longer wait before placing
-								humanPause()
-								task.wait(math.random(50, 150) / 100)
-								
-								if v then
-									-- Use safe block placement function
-									if safePlaceBlock(v, ToLace, PlaceHASHName, PlaceHASH) then
-										positions[i] = nil
-										processedBlocks = processedBlocks + 1
-										
-										-- Anti-detection: Random pause after each block
-										humanPause()
-									end
-								end
-							end
-						else
-							-- Advanced Anti-detection: Much longer wait before placing
-							humanPause()
-							task.wait(math.random(50, 150) / 100)
-							
-							if v then
-								PlaceBlock(v, ToLace, PlaceHASHName, PlaceHASH)
-								positions[i] = nil
-								processedBlocks = processedBlocks + 1
-								
-								-- Anti-detection: Random pause after each block
-								humanPause()
-							end
+						-- Add delay every few blocks to prevent lag and respect ping
+						if placedCount % maxBlocksPerFrame == 0 then
+							task.wait(delayBetweenBatches)
 						end
-						
-						-- Anti-detection: Session cooldown when limit reached
-						if processedBlocks >= maxBlocksPerSession then
-							task.wait(sessionCooldown)
-							processedBlocks = 0
-						end
-					end)
+					end
 				end
 			end
 		end
+		
+		-- Main paste loop - runs until all blocks are placed
+		local function PasteLoop()
+			while true do
+				local remainingBlocks = 0
+				for i, v in pairs(positions) do
+					if v then
+						remainingBlocks = remainingBlocks + 1
+					end
+				end
+				
+				if remainingBlocks == 0 then
+					break -- All blocks placed
+				end
+				
+				-- Place blocks that are in range
+				PlaceBlocksInRange()
+				
+				-- Wait a bit before checking again
+				task.wait(0.2)
+			end
+		end
+		
+		-- Start the paste process
+		task.spawn(PasteLoop)
 
 		print("positions debug: ",type(positions))
 
@@ -7331,22 +7073,14 @@ end
 
 		DebugCheck(0,"FERTIG!!!!!")
 
-		-- Log block printer completion
-		LoggingSystem:Log("INFO", "Block printer session completed", {
-			ProcessedBlocks = processedBlocks,
-			TotalPositions = #positions,
-			SessionDuration = tick() - LoggingSystem.SessionStartTime,
-			SafetyMode = _G.BlockPrinterSafetyMode,
-			AdvancedBypass = _G.BlockPrinterAdvancedBypass
-		})
+		-- Removed NOFLY() and teleportation - player stays where they are
+		-- NOFLY()
 
-		NOFLY()
+		Message("Finished!","Block Printer Finished! You can continue building manually.", "Nice!", 3)
 
-		Message("Finished!","Block Printer Finished! (Teleporting back to Start Position...)", "Nice!", 3)
-
-		task.wait(0.1)
-
-		TeleportV4(StartPosition)
+		-- Removed automatic teleportation back to start
+		-- task.wait(0.1)
+		-- TeleportV4(StartPosition)
 
 	end
 
@@ -7357,9 +7091,10 @@ end
 
 		local saved = {}
 
+		-- Optimized block breaking function
 		local function DestroyBlock(Block)
 			DebugCheck(0,"DestroyBlock_FUJNC")
-			if Block then
+			if Block and Block.Parent then
 				local H1 = RemoteData:FindFirstChild("TreeHashData").Value
 				local H2 = _G.TreeHash
 
@@ -7367,15 +7102,47 @@ end
 					[H1] = H2,
 					["part"] = Block,
 					["block"] = Block,
-					["norm"] = v,
+					["norm"] = Vector3.new(0, 1, 0), -- Fixed norm value
 					["pos"] = 0
 				}
-				TeleportV4(Block.Position + Vector3.new(0,10,0))
-				game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.CLIENT_BLOCK_HIT_REQUEST:InvokeServer(ohTable1)
-				task.wait(1)
-				if Block then
-					table.insert(saved,Block)
+				
+				-- Use pcall for error handling
+				local success, result = pcall(function()
+					game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.CLIENT_BLOCK_HIT_REQUEST:InvokeServer(ohTable1)
+				end)
+				
+				if success then
+					print("Broke block:", Block.Name)
+					table.insert(saved, Block)
+				else
+					warn("Failed to break block:", result)
 				end
+				
+				-- Reduced wait time for faster breaking
+				task.wait(0.1)
+			end
+		end
+		
+		-- Batch block breaking function for multiple blocks
+		local function DestroyBlocksBatch(blocks)
+			local batchSize = 5 -- Break 5 blocks at once
+			local delay = 0.05 -- Very short delay between batches
+			
+			for i = 1, #blocks, batchSize do
+				local batch = {}
+				for j = i, math.min(i + batchSize - 1, #blocks) do
+					table.insert(batch, blocks[j])
+				end
+				
+				-- Process batch simultaneously
+				for _, block in pairs(batch) do
+					task.spawn(function()
+						DestroyBlock(block)
+					end)
+				end
+				
+				-- Short delay between batches
+				task.wait(delay)
 			end
 		end
 
@@ -7435,41 +7202,32 @@ end
 			-- Funktion zum Finden des nächsten Teils
 
 
-			for i = 1,_G.PlayerBlockPrinterSpeed do
-				for i,SB in pairs(BLOCKS) do
-					task.wait()
-					task.spawn(function()
-						if SB and SB.Parent and SB.Parent.Name == "Blocks" then
-							DebugCheck(0,"SB:",SB.Name)
-							local dis = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - SB.Position).Magnitude
-							if dis > 30 then
-								DebugCheck(0,"IDS")
-								if _G.BlockPrinterTP == true then
-									TeleportV4(SB.Position + Vector3.new(0,10,0))
-									repeat wait(0.1) TeleportV4(SB.Position + Vector3.new(0,10,0)) until (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - SB.Position).Magnitude < 30
-									if v then
-										DebugCheck(0,"VTRUE")
-										DestroyBlock(SB)
-										saved[i] = nil
-									end
-								else
-									if v then
-										DebugCheck(0,"VFALSE")
-										DestroyBlock(SB)
-										saved[i] = nil
-									end
-								end
-							else
-								DebugCheck(0,"NODIS")
-								if SB then
-									DebugCheck(0,"VELSEFALSE")
-									DestroyBlock(SB)
-									saved[i] = nil
-								end
-							end
+			-- Optimized block breaking with batch processing
+			local blocksToBreak = {}
+			
+			-- Collect all blocks that need to be broken
+			for _, SB in pairs(BLOCKS) do
+				if SB and SB.Parent and SB.Parent.Name == "Blocks" then
+					DebugCheck(0,"SB:",SB.Name)
+					local dis = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - SB.Position).Magnitude
+					
+					if dis <= 30 then
+						-- Block is in range, add to breaking list
+						table.insert(blocksToBreak, SB)
+					else
+						-- Block is far, teleport if enabled
+						if _G.BlockPrinterTP == true then
+							TeleportV4(SB.Position + Vector3.new(0,10,0))
+							repeat wait(0.1) TeleportV4(SB.Position + Vector3.new(0,10,0)) until (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - SB.Position).Magnitude < 30
+							table.insert(blocksToBreak, SB)
 						end
-					end)
+					end
 				end
+			end
+			
+			-- Break blocks in batches for maximum efficiency
+			if #blocksToBreak > 0 then
+				DestroyBlocksBatch(blocksToBreak)
 			end
 		end
 
@@ -7639,193 +7397,11 @@ end
 
 	end
 
-	-- Safety Mode Toggle
-	local SafetyModeToggle = BlockPrinterSelection:AddToggle("SafetyModeToggle", {
-		Title = "Safety Mode (Recommended)",
-		Description = "Enables extra anti-detection measures",
-		Default = true
-	})
-	
-	SafetyModeToggle:OnChanged(function(Value)
-		_G.BlockPrinterSafetyMode = Value
-		if Value then
-			Message("Safety Mode", "Safety mode enabled! This will make block printing much safer but slower.", "OK", 5)
-		end
-	end)
-	
-	-- Advanced Bypass Mode Toggle
-	local AdvancedBypassToggle = BlockPrinterSelection:AddToggle("AdvancedBypassToggle", {
-		Title = "Advanced Bypass Mode",
-		Description = "Uses VirtualInputManager and advanced anti-detection",
-		Default = true
-	})
-	
-	AdvancedBypassToggle:OnChanged(function(Value)
-		_G.BlockPrinterAdvancedBypass = Value
-		if Value then
-			Message("Advanced Bypass", "Advanced bypass mode enabled! Using VirtualInputManager for more natural behavior.", "OK", 5)
-		end
-	end)
-
 	BlockPrinterSelection:AddButton({
 		Title = "Print Blocks",
 		Description = "",
 		Callback = function()
 			PlaceBlocksNew()
-		end
-	})
-	
-	-- PC Log Path Display
-	local PCLogPathLabel = BlockPrinterSelection:AddParagraph({
-		Title = "PC Log Path:",
-		Content = LoggingSystem.LogsToPC and LoggingSystem.PCLogFile or "PC Logging Disabled"
-	})
-	
-	-- Save Logs to PC Button
-	BlockPrinterSelection:AddButton({
-		Title = "Save Logs to PC",
-		Description = "Manually save current logs to PC workspace",
-		Callback = function()
-			if LoggingSystem.LogsToPC then
-				saveKickReportToPC()
-				Message("Success", "Logs saved to PC: " .. LoggingSystem.PCLogFile, "OK", 5)
-			else
-				Message("Error", "PC logging is disabled. Check console for errors.", "OK", 5)
-			end
-		end
-	})
-	
-	-- Log Viewer Button
-	BlockPrinterSelection:AddButton({
-		Title = "View Logs",
-		Description = "View recent logs to analyze kicks",
-		Callback = function()
-			-- Create log viewer UI
-			local logGui = Instance.new("ScreenGui")
-			logGui.Name = "LogViewer"
-			logGui.Parent = game.Players.LocalPlayer.PlayerGui
-			
-			local mainFrame = Instance.new("Frame")
-			mainFrame.Size = UDim2.new(0, 800, 0, 600)
-			mainFrame.Position = UDim2.new(0.5, -400, 0.5, -300)
-			mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-			mainFrame.BorderSizePixel = 0
-			mainFrame.Parent = logGui
-			Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-			
-			local title = Instance.new("TextLabel")
-			title.Size = UDim2.new(1, 0, 0, 40)
-			title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-			title.Text = "Log Viewer - Recent Logs"
-			title.TextColor3 = Color3.fromRGB(255, 255, 255)
-			title.Font = Enum.Font.GothamBold
-			title.TextSize = 18
-			title.Parent = mainFrame
-			Instance.new("UICorner", title).CornerRadius = UDim.new(0, 10)
-			
-			local scrollFrame = Instance.new("ScrollingFrame")
-			scrollFrame.Size = UDim2.new(1, -20, 1, -60)
-			scrollFrame.Position = UDim2.new(0, 10, 0, 50)
-			scrollFrame.BackgroundTransparency = 1
-			scrollFrame.ScrollBarThickness = 8
-			scrollFrame.Parent = mainFrame
-			
-			local layout = Instance.new("UIListLayout")
-			layout.Parent = scrollFrame
-			layout.SortOrder = Enum.SortOrder.LayoutOrder
-			layout.Padding = UDim.new(0, 5)
-			
-			-- Display recent logs
-			local logCount = 0
-			for i = #LoggingSystem.Logs, math.max(1, #LoggingSystem.Logs - 50), -1 do
-				local log = LoggingSystem.Logs[i]
-				if log then
-					local logFrame = Instance.new("Frame")
-					logFrame.Size = UDim2.new(1, 0, 0, 60)
-					logFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-					logFrame.Parent = scrollFrame
-					Instance.new("UICorner", logFrame).CornerRadius = UDim.new(0, 5)
-					
-					local levelColor = Color3.fromRGB(100, 100, 100)
-					if log.level == "ERROR" then
-						levelColor = Color3.fromRGB(255, 100, 100)
-					elseif log.level == "WARN" then
-						levelColor = Color3.fromRGB(255, 200, 100)
-					elseif log.level == "CRITICAL" then
-						levelColor = Color3.fromRGB(255, 50, 50)
-					elseif log.level == "INFO" then
-						levelColor = Color3.fromRGB(100, 200, 255)
-					end
-					
-					local levelLabel = Instance.new("TextLabel")
-					levelLabel.Size = UDim2.new(0, 80, 0, 20)
-					levelLabel.Position = UDim2.new(0, 10, 0, 5)
-					levelLabel.BackgroundTransparency = 1
-					levelLabel.Text = "[" .. log.level .. "]"
-					levelLabel.TextColor3 = levelColor
-					levelLabel.Font = Enum.Font.GothamBold
-					levelLabel.TextSize = 12
-					levelLabel.TextXAlignment = Enum.TextXAlignment.Left
-					levelLabel.Parent = logFrame
-					
-					local timeLabel = Instance.new("TextLabel")
-					timeLabel.Size = UDim2.new(0, 150, 0, 20)
-					timeLabel.Position = UDim2.new(0, 100, 0, 5)
-					timeLabel.BackgroundTransparency = 1
-					timeLabel.Text = log.timestamp
-					timeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-					timeLabel.Font = Enum.Font.Gotham
-					timeLabel.TextSize = 10
-					timeLabel.TextXAlignment = Enum.TextXAlignment.Left
-					timeLabel.Parent = logFrame
-					
-					local messageLabel = Instance.new("TextLabel")
-					messageLabel.Size = UDim2.new(1, -20, 0, 20)
-					messageLabel.Position = UDim2.new(0, 10, 0, 25)
-					messageLabel.BackgroundTransparency = 1
-					messageLabel.Text = log.message
-					messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-					messageLabel.Font = Enum.Font.Gotham
-					messageLabel.TextSize = 12
-					messageLabel.TextXAlignment = Enum.TextXAlignment.Left
-					messageLabel.TextWrapped = true
-					messageLabel.Parent = logFrame
-					
-					local dataLabel = Instance.new("TextLabel")
-					dataLabel.Size = UDim2.new(1, -20, 0, 15)
-					dataLabel.Position = UDim2.new(0, 10, 0, 40)
-					dataLabel.BackgroundTransparency = 1
-					dataLabel.Text = "Data: " .. game:GetService("HttpService"):JSONEncode(log.data)
-					dataLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-					dataLabel.Font = Enum.Font.Gotham
-					dataLabel.TextSize = 10
-					dataLabel.TextXAlignment = Enum.TextXAlignment.Left
-					dataLabel.TextWrapped = true
-					dataLabel.Parent = logFrame
-					
-					logCount = logCount + 1
-				end
-			end
-			
-			scrollFrame.CanvasSize = UDim2.new(0, 0, 0, logCount * 65)
-			
-			-- Close button
-			local closeBtn = Instance.new("TextButton")
-			closeBtn.Size = UDim2.new(0, 100, 0, 30)
-			closeBtn.Position = UDim2.new(1, -110, 1, -40)
-			closeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-			closeBtn.Text = "Close"
-			closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			closeBtn.Font = Enum.Font.GothamBold
-			closeBtn.TextSize = 14
-			closeBtn.Parent = mainFrame
-			Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
-			
-			closeBtn.MouseButton1Click:Connect(function()
-				logGui:Destroy()
-			end)
-			
-			Message("Log Viewer", "Showing last 50 logs. Look for ERROR and CRITICAL entries!", "OK", 10)
 		end
 	})
 
@@ -8048,6 +7624,11 @@ end
 			Title = "Clone Blocks",
 			Description = "",
 			Callback = function()
+				-- Automatically turn off resize tool when cloning blocks
+				if Options.UseMovingTool and Options.UseMovingTool.Value then
+					Options.UseMovingTool:SetValue(false)
+				end
+				
 				for i,v in ipairs(CloneFolder:GetChildren()) do
 					v:Destroy()
 					DebugCheck(0,v.Name.." Got Deleted!")
@@ -8081,15 +7662,49 @@ end
 				if 	game:GetService("Workspace"):FindFirstChild("NewPart") then
 					local PART = game:GetService("Workspace"):FindFirstChild("NewPart")
 					local BLOCKS = GetBlocks(PART.Position, PART.Size, PART)
+					
+					-- Block counting and listing
+					local blockCounts = {}
+					local totalBlocks = 0
+					local copiedBlocks = {}
+					
 					for i,SB in pairs(BLOCKS) do
 						if SB.Parent.Name == "Blocks" then
+							-- Count block types
+							local blockName = SB.Name
+							blockCounts[blockName] = (blockCounts[blockName] or 0) + 1
+							totalBlocks = totalBlocks + 1
+							
+							-- Clone the block
 							local NEWSB = SB:Clone()
 							NEWSB.Parent = CloneFolder
 							NEWSB.Position = SB.Position + Vector3.new(0,3,0)
-
 							NEWSB.Transparency = 0.5
+							
+							-- Add to copied blocks list
+							table.insert(copiedBlocks, {
+								name = blockName,
+								position = SB.Position,
+								cframe = SB.CFrame
+							})
 						end
 					end
+					
+					-- Display block information
+					print("=== BLOCKS COPIED ===")
+					print("Total blocks copied:", totalBlocks)
+					print("Block types found:")
+					
+					for blockName, count in pairs(blockCounts) do
+						print("  " .. blockName .. ": " .. count .. " blocks")
+					end
+					
+					print("=== END BLOCK LIST ===")
+					
+					-- Show notification with block count
+					Message("Blocks Copied!", "Successfully copied " .. totalBlocks .. " blocks! Check console for details.", "Nice!", 5)
+				else
+					Message("Error!", "No NewPart found! Please select blocks first.", "Okay!", 3)
 				end
 
 			end
@@ -8099,9 +7714,15 @@ end
 			Title = "Paste Blocks",
 			Description = "",
 			Callback = function()
+				-- Automatically disable moving tool when pasting
 				a = pcall(function()
 					unequipped()
 				end)
+				
+				-- Disable moving tool toggle
+				if Options.UseMovingTool then
+					Options.UseMovingTool:SetValue(false)
+				end
 
 				local WAITGAY_XE = 0
 
@@ -8142,56 +7763,138 @@ end
 
 				]]
 
-				for i,pos in pairs(positions) do
-					task.spawn(function()
-
-						local Block = positions[i]
-						local pos = Block.CFrame
-						--if pos and Block then
-						if Block.Name == "soil" then
-							Block.Name = "grass"
-							PLOW = true
-						end
-
-						local distance = (Block.Position - game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
-
-						print("distance:",distance)
-
-						if distance > 30 then
-
-							TeleportV4(Block.Position)
-
-							repeat wait() until (Block.Position - game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude < 30
-
-							local args = {
-								[1] = {
-									["upperBlock"] = false,
-									["cframe"] = pos, -- CFrame.new(Vector3.new(pos.x, pos.y, pos.z, 1, 0, 0, 0, 1, 0, 0, 0, 1))
-									["blockType"] = Block.Name,
-									[CropPlaceH1] = CropPlaceH2
-								}
-							}
-
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged.CLIENT_BLOCK_PLACE_REQUEST:InvokeServer(unpack(args))	
-
-						else
-							local args = {
-								[1] = {
-									["upperBlock"] = false,
-									["cframe"] = pos, -- CFrame.new(Vector3.new(pos.x, pos.y, pos.z, 1, 0, 0, 0, 1, 0, 0, 0, 1))
-									["blockType"] = Block.Name,
-									[CropPlaceH1] = CropPlaceH2
-								}
-							}
-
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged.CLIENT_BLOCK_PLACE_REQUEST:InvokeServer(unpack(args))
-
-						end
-
-
-						--end
+				-- Improved paste system with proper preview management
+				local function PlaceBlockSafely(block, position, blockName)
+					local args = {
+						[1] = {
+							["upperBlock"] = false,
+							["cframe"] = position,
+							["blockType"] = blockName,
+							[CropPlaceH1] = CropPlaceH2
+						}
+					}
+					
+					-- Use pcall to handle errors
+					local success, result = pcall(function()
+						game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged.CLIENT_BLOCK_PLACE_REQUEST:InvokeServer(unpack(args))
 					end)
+					
+					if success then
+						print("Placed block:", blockName)
+						return true
+					else
+						warn("Failed to place block:", result)
+						return false
+					end
 				end
+				
+				-- Main paste loop - single threaded to prevent race conditions
+				local function PasteLoop()
+					local totalBlocks = 0
+					local placedBlocks = 0
+					
+					-- Count total blocks first
+					for i, block in pairs(positions) do
+						if block then
+							totalBlocks = totalBlocks + 1
+						end
+					end
+					
+					print("Starting paste process for", totalBlocks, "blocks")
+					
+					while placedBlocks < totalBlocks do
+						local remainingBlocks = {}
+						
+						-- Collect all remaining blocks (check if they exist and are in CloneFolder)
+						for i, block in pairs(positions) do
+							if block and block.Parent == CloneFolder then
+								table.insert(remainingBlocks, {index = i, block = block})
+							end
+						end
+						
+						if #remainingBlocks == 0 then
+							print("No more blocks to process, but placed:", placedBlocks, "total:", totalBlocks)
+							break -- All blocks placed
+						end
+						
+						-- Check each block and place if in range
+						for _, data in pairs(remainingBlocks) do
+							local block = data.block
+							local distance = (block.Position - game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
+							
+							if distance <= 30 then
+								-- Prepare block name
+								local blockName = block.Name
+								if blockName == "soil" then
+									blockName = "grass"
+									PLOW = true
+								end
+								
+								-- Try to place the block
+								local success = PlaceBlockSafely(block, block.CFrame, blockName)
+								
+								if success then
+									-- Only remove from preview after successful placement
+									block:Destroy()
+									positions[data.index] = nil
+									placedBlocks = placedBlocks + 1
+									print("Successfully placed block", placedBlocks .. "/" .. totalBlocks .. ":", blockName)
+								else
+									print("Failed to place block:", blockName)
+								end
+							end
+						end
+						
+						-- Wait before checking again
+						task.wait(0.2)
+					end
+					
+					print("Paste loop completed. Placed:", placedBlocks, "Total:", totalBlocks)
+				end
+				
+				-- Start the paste process
+				task.spawn(PasteLoop)
+				
+				-- Wait for all blocks to be placed and show completion message
+				task.spawn(function()
+					local startTime = tick()
+					local totalBlocks = 0
+					
+					-- Count total blocks first
+					for i, block in pairs(positions) do
+						if block then
+							totalBlocks = totalBlocks + 1
+						end
+					end
+					
+					print("Total blocks to paste:", totalBlocks)
+					
+					while true do
+						local remainingCount = 0
+						local placedCount = 0
+						
+						-- Count remaining and placed blocks
+						for i, block in pairs(positions) do
+							if block then
+								if block.Parent == CloneFolder then
+									remainingCount = remainingCount + 1
+								else
+									placedCount = placedCount + 1
+								end
+							end
+						end
+						
+						print("Remaining:", remainingCount, "Placed:", placedCount, "Total:", totalBlocks)
+						
+						if remainingCount == 0 and placedCount == totalBlocks then
+							local elapsedTime = tick() - startTime
+							Message("Finished!", "All " .. totalBlocks .. " blocks have been pasted successfully! Time: " .. math.floor(elapsedTime) .. "s", "Nice!", 3)
+							break
+						end
+						
+						task.wait(1)
+					end
+				end)
 
 
 				--[[
@@ -9762,4 +9465,1061 @@ local BRINGMOBSDNJUGA = Tab:CreateToggle({
 		Numeric = false, -- Only allows numbers
 		Finished = false, -- Only calls callback when you press enter
 		Callback = function(Text)
-			if Text == nil or Text == "" or 
+			if Text == nil or Text == "" or Text == " " then return nil end
+			local ID = game:GetService("Players"):GetUserIdFromNameAsync(Text) 
+			if not ID then return nil end 
+			_G.Island_USERID = ID
+			UserIdLabel:SetDesc("UserId: ".._G.Island_USERID.." ("..Text..")")
+		end
+	})
+
+	local Input = IslandFarmSelection:AddInput("Input", {
+		Title = "Userid to Farm",
+		Default = game.Players.LocalPlayer.UserId,
+		Placeholder = game.Players.LocalPlayer.UserId,
+		Numeric = true, -- Only allows numbers
+		Finished = false, -- Only calls callback when you press enter
+		Callback = function(ID)
+			if not ID then return nil end
+			_G.Island_USERID = ID
+			UserIdLabel:Set("UserId: ".._G.Island_USERID)
+		end
+	})
+
+	local Portal
+
+	local RemovePortal = IslandFarmSelection:AddToggle("RemovePortal", {Title = "Remove Portal", Default = false })
+
+	RemovePortal:OnChanged(function(Value)
+		if not Portal or Portal.Parent ~= GetIsland():FindFirstChild("Blocks") then
+			print("No Portal set... Getting!")
+			local Island = GetIsland()
+			if Island and Island:FindFirstChild("Blocks") then
+				for i,v in pairs(Island:FindFirstChild("Blocks"):GetChildren()) do 
+					if v:FindFirstChild("PortalActive") and v:FindFirstChild("portal-to-spawn") then
+						Portal = v
+					end
+				end 
+			end 
+		end
+		if Value == true then
+			local Island = GetIsland()
+			if Island and Island:FindFirstChild("Blocks") then
+				local Portal = Island:FindFirstChild("Blocks"):FindFirstChild("portalToSpawn")
+				if Portal then
+					Portal.Parent = game
+				end
+			end 
+		else
+			local Island = GetIsland()
+			if Island and Island:FindFirstChild("Blocks") then
+				local Portal = game:FindFirstChild("portalToSpawn")
+				if Portal then
+					Portal.Parent = Island:FindFirstChild("Blocks")
+				end
+			end 
+		end
+	end)
+
+	local OtherSelection = Tabs.Other:AddSection("Other")
+
+
+	OtherSelection:AddButton({
+		Title = "Read all Mails",
+		Description = "",
+		Callback = function()
+			for i = 1,1000 do
+				local args = {
+					[1] = "game_update_"..i
+				}
+
+				game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged:FindFirstChild("Mailbox/ReadMail"):FireServer(unpack(args))
+
+				task.wait()    
+			end
+		end
+	})
+
+	OtherSelection:AddButton({
+		Title = "No Fog",
+		Description = "",
+		Callback = function()
+			_G.NoFog = true
+			Message("Success!", "Anti Fog got successfully Enabled!", "Nice!", 1)
+		end
+	})
+
+	OtherSelection:AddButton({
+		Title = "Kick all NPCS",
+		Description = "",
+		Callback = function()
+			Window:Dialog({
+				Title = "Are you sure?",
+				Content = "",
+				Buttons = {
+					{
+						Title = "Confirm",
+						Callback = function()
+							local Island = GetIsland()
+							local Entities = Island:FindFirstChild("Entities") 
+							if Entities then
+								for i,v in pairs(Entities:GetChildren()) do
+									if v:FindFirstChild("VillagerID") then
+										game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("RequestVillagerLeave"):FireServer(v)
+									end
+								end
+							end
+						end
+					},
+					{
+						Title = "Cancel",
+						Callback = function()
+
+						end
+					}
+				}
+			})
+		end
+	})
+
+
+	local AutoPickupTools = OtherSelection:AddToggle("AutoPickupTools", {Title = "Auto Pickup Tools", Default = false })
+
+	AutoPickupTools:OnChanged(function(Value)
+		if Value == true then
+			_G.AutoPickupItems = true
+		else
+			_G.AutoPickupItems = false
+		end
+	end)
+
+	local CleanIslandToggle = OtherSelection:AddToggle("CleanIsland", {Title = "Clean Island", Default = false })
+
+	CleanIslandToggle:OnChanged(function(Value)
+		if Value == true then
+			_G.AutoCleanIsland = true
+		else
+			_G.AutoCleanIsland = false
+		end
+	end)
+
+
+--[[
+
+local Section = Tab:CreateSection("Chest")
+
+Toggle = Tab:CreateToggle({
+	Name = "Chest Aura",
+	CurrentValue = false,
+	Flag = "Chest_Aura", 
+	Callback = function(Value)
+		_G.ChestAura = Value
+	end,
+})
+
+]]
+
+	local FlowerSelection = Tabs.Other:AddSection("Flower")
+
+	local FlowerAutoFarm = FlowerSelection:AddToggle("FlowerAutoFarm", {Title = "Flower Auto Farm", Default = false })
+
+	FlowerAutoFarm:OnChanged(function(Value)
+		if Value == true then
+			_G.flowerFarm = true
+		else
+			_G.flowerFarm = false
+		end
+	end)
+
+	local FlowerAura = FlowerSelection:AddToggle("FlowerAura", {Title = "Flower Aura", Default = false })
+
+	FlowerAura:OnChanged(function(Value)
+		if Value == true then
+			_G.flowerAura = true
+		else
+			_G.flowerAura = false
+		end
+	end)
+
+	local PlowSelection = Tabs.Other:AddSection("Plow Island")
+
+	local PlowAuraToggle = PlowSelection:AddToggle("PlowAura", {Title = "Plow Aura", Default = false })
+
+	PlowAuraToggle:OnChanged(function(Value)
+		if Value == true then
+			_G.PlowAura = true
+		else
+			_G.PlowAura = false
+		end
+	end)
+
+	local unPlowAuraToggle = PlowSelection:AddToggle("unPlowAura", {Title = "unPlow Aura", Default = false })
+
+	unPlowAuraToggle:OnChanged(function(Value)
+		if Value == true then
+			_G.UnPlowAura = true
+		else
+			_G.UnPlowAura = false
+		end
+	end)
+
+	local PlowDistanceSlider = PlowSelection:AddSlider("PlowDistanceSlider", {
+		Title = "Plow Distance",
+		Description = "",
+		Default = 10,
+		Min = 1,
+		Max = 35,
+		Rounding = 0,
+		Callback = function(Value)
+			_G.PlowDistance = Value
+		end
+	})
+
+
+	local CropPlaceAuraSelection = Tabs.Other:AddSection("Crop Place Aura")
+
+	local CropPlaceAura = CropPlaceAuraSelection:AddToggle("CropPlaceAura", {Title = "Crop Place Aura", Default = false })
+
+	CropPlaceAura:OnChanged(function(Value)
+		if Value == true then
+			_G.AuraAuraPlace = true
+		else
+			_G.AuraAuraPlace = false
+		end
+	end)
+
+	local CropPlaceAuraDistance = CropPlaceAuraSelection:AddSlider("CropPlaceAuraDistance", {
+		Title = "Crop Distance",
+		Description = "",
+		Default = 25,
+		Min = 1,
+		Max = 25,
+		Rounding = 0,
+		Callback = function(Value)
+			_G.PlaceCropsMaxArea = Value
+		end
+	})
+
+	local AnimalSelection = Tabs.Other:AddSection("Pets/Animals")
+
+	local AnimalAutoFarm = AnimalSelection:AddToggle("AnimalAutoFarm", {Title = "Pet Auto Farm", Default = false })
+
+	AnimalAutoFarm:OnChanged(function(Value)
+		if Value == true then
+			_G.PET_ANIMALFarm = true
+		else
+			_G.PET_ANIMALFarm = false
+		end
+	end)
+
+
+	local AnimalAura = AnimalSelection:AddToggle("AnimalAura", {Title = "Pet Aura", Default = false })
+
+	AnimalAura:OnChanged(function(Value)
+		if Value == true then
+			_G.PET_ANIMALAura = true
+		else
+			_G.PET_ANIMALAura = false
+		end
+	end)
+
+
+	local BankSelection = Tabs.Other:AddSection("Bank")
+
+	local DeposittoBank = BankSelection:AddInput("DeposittoBank", {
+		Title = "Deposit to Bank",
+		Default = "0",
+		Placeholder = "0",
+		Numeric = true, -- Only allows numbers
+		Finished = true, -- Only calls callback when you press enter
+		Callback = function(Value)
+			local args = {
+				[1] = Hash(),
+				[2] = {
+					[1] = {
+						["accountType"] = "PERSONAL",
+						["transferType"] = "DEPOSIT",
+						["amount"] = tonumber(Value)
+					}
+				}
+			}
+
+			game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.TransactionBankBalance:FireServer(unpack(args))	
+		end
+	})
+
+	local WithdrawFromBank = BankSelection:AddInput("WithdrawFromBank", {
+		Title = "Withdraw From Bank",
+		Default = "0",
+		Placeholder = "0",
+		Numeric = true, -- Only allows numbers
+		Finished = true, -- Only calls callback when you press enter
+		Callback = function(Value)
+			local args = {
+				[1] = Hash(),
+				[2] = {
+					[1] = {
+						["accountType"] = "PERSONAL",
+						["transferType"] = "WITHDRAWAL",
+						["amount"] = tonumber(Value)
+					}
+				}
+			}
+
+			game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.TransactionBankBalance:FireServer(unpack(args))	
+		end
+	})
+
+	local ScriptSettingsSelection = Tabs.Settings:AddSection("Script Settings")
+
+
+	local TeleportMethod = ScriptSettingsSelection:AddDropdown("TeleportMethod", {
+		Title = "Teleport Method",
+		Values = {"Tween","TweenV3", "MiniTp", "Instant", "Pathfinding", "PathfindingV2"},
+		Multi = false,
+		Default = 1,
+	})
+
+
+	TeleportMethod:OnChanged(function(Value)
+		_G.TeleportMethod = Value
+	end)
+
+	ScriptSettingsSelection:AddButton({
+		Title = "Stop Gay Tween",
+		Description = "",
+		Callback = function()
+			if LASTTWEEN == nil then
+				-- warn("Tween ist nil!")
+			else
+				LASTTWEEN:Cancel()
+			end
+		end
+	})
+
+	local DisableXP = ScriptSettingsSelection:AddToggle("DisableXP", {Title = "Disable XP [ANTI LAG!]", Default = false })
+
+	DisableXP:OnChanged(function(Value)
+		local LocalPlayer = game.Players.LocalPlayer
+		if Value == true then
+			LocalPlayer.PlayerScripts.TS.modules.experience["experience-listener"].Disabled = true
+		else
+			LocalPlayer.PlayerScripts.TS.modules.experience["experience-listener"].Disabled = false
+		end
+	end)
+
+	local originalValues = {}
+
+	local AntilagV1L
+
+	local Lighting = game:GetService("Lighting")
+
+	local function AntiLag()
+		local PCALL = pcall(function()
+			-- Speichere die ursprünglichen Werte der Eigenschaften
+
+			local Terrain = workspace:FindFirstChildOfClass('Terrain')
+			originalValues.TerrainWaterWaveSize = Terrain.WaterWaveSize
+			originalValues.TerrainWaterWaveSpeed = Terrain.WaterWaveSpeed
+			originalValues.TerrainWaterReflectance = Terrain.WaterReflectance
+			originalValues.TerrainWaterTransparency = Terrain.WaterTransparency
+
+			originalValues.LightingGlobalShadows = Lighting.GlobalShadows
+			originalValues.LightingFogEnd = Lighting.FogEnd
+			originalValues.RenderingQualityLevel = settings().Rendering.QualityLevel
+
+			for i, v in pairs(game.Workspace:GetDescendants()) do
+
+				if v:IsA("MeshPart") and v.Parent and v.Parent.Name == "wheat" then
+
+					print(v.Name)
+					originalValues[v] = {
+						Material = v.Material,
+						Reflectance = v.Reflectance,
+						MeshId = v.MeshId
+					}
+					v.Material = Enum.Material.Plastic
+					v.Reflectance = 0
+					v.MeshId = 0
+
+				elseif v:IsA("BasePart") or v:IsA("UnionOperation") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then 
+
+
+					if v.Name == "stage-3" then
+						print(v.Name)
+					end
+					originalValues[v] = {
+						Material = v.Material,
+						Reflectance = v.Reflectance
+					}
+					v.Material = Enum.Material.Plastic
+					v.Reflectance = 0
+
+				elseif v:IsA("Decal") then
+					originalValues[v] = {
+						Transparency = v.Transparency
+					}
+					v.Transparency = 1
+				elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+					originalValues[v] = {
+						Lifetime = v.Lifetime
+					}
+					v.Lifetime = NumberRange.new(0)
+				elseif v:IsA("Explosion") then
+					originalValues[v] = {
+						BlastPressure = v.BlastPressure,
+						BlastRadius = v.BlastRadius
+					}
+					v.BlastPressure = 1
+					v.BlastRadius = 1
+				end
+
+			end
+
+			for i, v in pairs(Lighting:GetDescendants()) do
+				if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then
+					originalValues[v] = {
+						Enabled = v.Enabled
+					}
+					v.Enabled = false
+				end
+			end
+
+			-- Überwache neue Kinder im Workspace und entferne bestimmte Elemente
+
+			local function handleDescendantAdded(child)
+				coroutine.wrap(function()
+					local v = child
+					if v:IsA("MeshPart") and v.Parent and v.Parent.Name == "wheat" then
+						originalValues[v] = {
+							Material = v.Material,
+							Reflectance = v.Reflectance,
+							MeshId = v.MeshId
+						}
+						v.Material = Enum.Material.Plastic
+						v.Reflectance = 0
+						v.MeshId = 0
+					elseif child:IsA('ForceField') then
+						task.wait()
+						child:Destroy()
+					elseif child:IsA('Sparkles') then
+						task.wait()
+						child:Destroy()
+					elseif child:IsA('Smoke') or child:IsA('Fire') then
+						task.wait()
+						child:Destroy()
+					end
+				end)()
+			end
+
+			AntilagV1L = workspace.DescendantAdded:Connect(handleDescendantAdded)
+		end)
+	end
+
+	local function UndoAntiLag()
+		local Pcall = pcall(function()
+			-- Stelle die ursprünglichen Werte der Eigenschaften wieder her
+
+			local Terrain = workspace:FindFirstChildOfClass('Terrain')
+			Terrain.WaterWaveSize = originalValues.TerrainWaterWaveSize
+			Terrain.WaterWaveSpeed = originalValues.TerrainWaterWaveSpeed
+			Terrain.WaterReflectance = originalValues.TerrainWaterReflectance
+			Terrain.WaterTransparency = originalValues.TerrainWaterTransparency
+
+			Lighting.FogEnd = originalValues.LightingFogEnd
+			settings().Rendering.QualityLevel = originalValues.RenderingQualityLevel
+
+			for i, v in pairs(game.Workspace:GetDescendants()) do
+				if originalValues[v] then
+					if v:IsA("MeshPart") and v.Parent and v.Parent.Name == "wheat"  then
+
+						v.Material = originalValues[v].Material
+						v.Reflectance = originalValues[v].Reflectance
+						v.MeshId = originalValues[v].MeshId
+
+
+					elseif  v:IsA("BasePart") or v:IsA("UnionOperation") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+						v.Material = originalValues[v].Material
+						v.Reflectance = originalValues[v].Reflectance
+					elseif v:IsA("Decal") then
+						v.Transparency = originalValues[v].Transparency
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+						v.Lifetime = originalValues[v].Lifetime
+					elseif v:IsA("Explosion") then
+						v.BlastPressure = originalValues[v].BlastPressure
+						v.BlastRadius = originalValues[v].BlastRadius
+					end
+					originalValues[v] = nil
+				end
+			end
+
+			for i, v in pairs(Lighting:GetDescendants()) do
+				if originalValues[v] then
+					v.Enabled = originalValues[v].Enabled
+					originalValues[v] = nil
+				end
+			end
+
+
+			if AntilagV1L then
+				AntilagV1L:Disconnect()
+			end
+		end)
+	end
+
+
+
+--[[
+
+local AntiLagV2 = ScriptSettingsSelection:AddToggle("AntiLagV2", {Title = "Anti Lag V2", Default = false })
+
+AntiLagV2:OnChanged(function(Value)
+	local LocalPlayer = game.Players.LocalPlayer
+		if Value == true then
+			LocalPlayer.PlayerScripts.TS.modules.experience["experience-listener"].Disabled = true
+		else
+			LocalPlayer.PlayerScripts.TS.modules.experience["experience-listener"].Disabled = false
+		end
+		if Value == true then
+			-- AntiLag()
+		else
+			UndoAntiLag()
+		end
+
+end)
+
+]]
+
+	ScriptSettingsSelection:AddButton({
+		Title = "Stop Script",
+		Description = "",
+		Callback = function()
+			if MAINSCRIPTHANDLER ~= nil then
+				MAINSCRIPTHANDLER:Disconnect()
+			end
+		end
+	})
+
+	local FlyKeyBind = ScriptSettingsSelection:AddKeybind("FlyKeyBind", {
+		Title = "Fly Key",
+		Mode = "Toggle", -- Always, Toggle, Hold
+		Default = "G", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
+
+		-- Occurs when the keybind is clicked, Value is `true`/`false`
+		Callback = function(Value)
+			if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart"):FindFirstChild("BodyVelocity") then
+				PlayerFly:SetValue(false)
+			else
+				PlayerFly:SetValue(true)
+			end
+		end,
+
+		-- Occurs when the keybind itself is changed, `New` is a KeyCode Enum OR a UserInputType Enum
+		ChangedCallback = function(New)
+			print("Keybind changed!", New)
+		end
+	})
+
+
+	local ColorSettingsSelection = Tabs.Settings:AddSection("Color Settings")
+
+	local ResizeToolOutlineColor = ColorSettingsSelection:AddColorpicker("ResizeToolOutlineColor", {
+		Title = "ResizeToolOutlineColor",
+		Default = Color3.fromRGB(225, 0, 0)
+	})
+
+	ResizeToolOutlineColor:OnChanged(function(Value)
+		_G.ResizeToolOutlineColor = Value
+	end)
+
+	local ResizeToolMoveButtons = ColorSettingsSelection:AddColorpicker("ResizeToolMoveButtons", {
+		Title = "ResizeToolMoveButtons",
+		Default = Color3.fromRGB(254, 254, 254)
+	})
+
+	ResizeToolMoveButtons:OnChanged(function(Value)
+		_G.ResizeToolMoveButtonColor = Value
+	end)
+
+	local ResizeToolFillColor = ColorSettingsSelection:AddColorpicker("ResizeToolFillColor", {
+		Title = "Resize Tool FillColor",
+		Description = "",
+		Transparency = 0,
+		Default = Color3.fromRGB(96, 205, 255),
+	})
+
+	ResizeToolFillColor:OnChanged(function()
+		_G.ResizeToolFillColor = ResizeToolFillColor.Value
+		_G.ResizeToolFillTransparency = ResizeToolFillColor.Transparency
+	end)
+
+
+--[[
+
+local Section = Tab:CreateSection("Loader Settings")
+
+CreateFolder("AutoStart")
+CreateFile("/AutoStart/AutoLoadSettings", "false", true)
+
+local Button = Tab:CreateButton({
+	Name = "Load Settings",
+	Callback = function()
+		Rayfield:LoadConfiguration()
+	end,
+})
+
+Toggle = Tab:CreateToggle({
+	Name = "Auto Load Settings on Script Start",
+	CurrentValue = false,
+	Flag = "Auto Load Settings on Script Start", 
+	Callback = function(Value)
+		if Value == true then
+			CreateFile("/AutoStart/AutoLoadSettings", "true", false)
+		else
+			CreateFile("/AutoStart/AutoLoadSettings", "false", false)
+		end
+	end,
+})
+
+if ReadFile("/AutoStart/AutoLoadSettings") == "true" then
+	print("Loading Settings...")
+	Rayfield:LoadConfiguration()
+else
+	print("Not Loading Settings!")
+end
+
+]]
+
+--[[
+
+local Button = Tab:CreateButton({
+	Name = "Anti Cheat Bypass [BETA]",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/samuelLovesPie/verm_releases/main/IslandsTPBypass.lua"))()
+	end,
+})
+
+]]
+
+
+
+	_G.TweenFlySpeed = 25
+
+	_G.RockTarget = "Stone"
+	_G.RockFarmSpeed = 25
+	_G.AutoReplaceCrop = true
+	_G.SelectedTree = "all"
+	_G.SelectedMob = "slime"
+	_G.SelectedCrop = "wheat"
+	_G.CropAura_BETA = false
+	_G.UseSichle = true
+	_G.SichleCropDelay = 13
+	_G.SichleCropRange = 30
+	_G.WalkSpeed = 30
+	_G.JumpPower = 50
+	_G.TeleportMethod = "Tween"
+	_G.UseSichleTool = "sickleStone"
+	_G.PET_ANIMALFarm = false
+	_G.PET_ANIMALAura = false
+	_G.PlowDistance = 10
+	_G.FastBlockPrinter = true
+	_G.Place3 = false
+	_G.PlayerBlockPrinterSpeed = 5
+	_G.BlockPrinterTP = true
+	_G.Island_USERID = game.Players.LocalPlayer.UserId
+	_G.SelectedBoss = "slimeKing"
+	_G.MobTpYPos = 8
+	_G.SafeUseSichle = true
+	_G.SuperFastCropFarm = false
+	_G.RemotesToSendToDestroy = 3
+	_G.PlaceCropsMaxArea = 30
+
+	_G.CheckPrintedBlocks = true
+
+	_G.SelectedTotem = "totemWheat"
+	_G.SelectedUpgrade = "utility"
+	_G.TotemLevel = 25
+	_G.AutoUpgradeTotem = false 
+
+	_G.ResizeToolOutlineColor = Color3.fromRGB(225, 0, 0)
+
+	_G.ResizeToolMoveButtonColor = Color3.fromRGB(254, 254, 254)
+
+	_G.ResizeToolFillTransparency = 1
+	_G.ResizeToolFillColor = Color3.fromRGB(225, 225, 225)
+
+	local MainCooldown = false
+	local CB = false
+
+	local FM = false
+	local ReplaceCooldown = false
+
+	game:GetService("RunService").RenderStepped:Connect(function()
+		local Character = game.Players.LocalPlayer.Character 
+		if Character then
+			local Humanoid = Character:FindFirstChild("Humanoid")
+			if Humanoid then
+				Humanoid.WalkSpeed = _G.WalkSpeed or 30
+				Humanoid.JumpPower = _G.JumpPower or 50
+			end
+		end
+	end)
+
+
+
+	MAINSCRIPTHANDLER = game:GetService("RunService").Heartbeat:Connect(function()
+		if _G.NoFog == true then
+			local Lighting = game:GetService("Lighting")
+			Lighting.FogEnd = 100000
+			for i,v in pairs(Lighting:GetDescendants()) do
+				if v:IsA("Atmosphere") then
+					v:Destroy()
+				end
+			end
+		end
+
+		-- Event --
+
+		-- Event --
+
+
+		if _G.AutoFarm == true then
+			if FM == false then
+				FM = true
+				FarmMob()
+				--task.wait(0.1)
+				FM = false
+			end
+		else
+			_G.MobRemoteSpamming = false
+			if _G.DoubleAutoFarm == true then
+				DoubleFarmMob()
+			end
+		end
+
+
+
+		if _G.BossAutoFarm == true then
+			BossCheck(_G.SelectedBoss)
+		end
+
+		if _G.MobKillAura == true then
+			-- Double check that the toggle is still enabled before calling KillAura
+			if Options.MobKillAuraToggle and Options.MobKillAuraToggle.Value == true then
+				KillAura()
+			else
+				-- Toggle was disabled, reset cooldown and update global
+				_G.MobKillAura = false
+				KILLAURA_COOLDOWN = false
+			end
+		end
+
+		if _G.voidParasiteFarm == true then
+			voidParasiteFarm(true)
+		end
+
+		if _G.SpiritAutoFarmBool == true then
+			spiritFarm(true)
+		end
+
+
+
+		if _G.AuraAuraPlace == true then
+			SeedAura()
+		end
+
+		if _G.PET_ANIMALFarm == true then
+			PET_ANIMALFarm(true)
+		end
+
+		if _G.PET_ANIMALAura == true then
+			PET_ANIMALFarm(false)
+		end
+
+		if _G.flowerAura == true  then
+			flowerFarm(false)
+		end
+
+		if _G.PlowAura == true  then
+			if PLAC == false then -- funktion cooldown wegen lag
+				PlowAura(true)
+			end
+		end
+
+
+		if _G.UnPlowAura == true then -- funktion cooldown wegen lag
+			if PLAC == false then
+				PlowAura(false)
+			end
+		end
+
+		if _G.flowerFarm == true  then
+			flowerFarm(true)
+		end
+
+		if _G.CropAutoFarm == true then
+			if _G.UseSichle == true then
+				if SichleFarmCooldown == false then
+					SichleFarmCooldown = true
+					local LocalPlayer = game.Players.LocalPlayer
+					SichleCropFarm(true)
+				end
+			else
+				local LocalPlayer = game.Players.LocalPlayer
+				CropFarm(true)
+			end
+
+		end
+
+		if _G.CropAura_BETA == true then
+			if _G.UseSichle == true then
+				if SichleAuraCooldown == false then
+					SichleAuraCooldown = true
+					local LocalPlayer = game.Players.LocalPlayer
+					SichleCropFarm(false)
+				end
+			else
+				local LocalPlayer = game.Players.LocalPlayer
+				CropFarm(false)
+			end
+		end
+
+
+		if _G.TreeAutoFarm == true then
+			TreeFarm(true)
+		end	
+
+		if _G.TreeAura == true then
+			TreeFarm(false)
+			-- TreeAura()
+		end
+
+		if _G.FishFarm == true then
+			FishFarm()
+		end
+
+		if _G.ChestAura == true then
+			ChestAura()
+		end
+
+		if _G.AutoCollectFruits == true then
+			AutoCollectFruits()
+		end
+
+		if _G.RockAutoFarm == true then
+			RockFarmV2(_G.RockTarget or "Stone", true)
+		end
+
+
+		if _G.RockFarmonIsland == true then
+			RockFarmV2(_G.RockTargetonIsland or "Stone", true)
+		end
+
+		if _G.RockAura == true then
+			RockAura()
+		end
+
+		if _G.AutoPickupItems == true then
+			AutoPickupItems()
+		end
+
+		if _G.AutoCleanIsland == true then
+			CleanIsland()
+		end
+
+		-- TOTEM --
+
+
+		if _G.AutoCollectTotemItems == true then
+			AutoCollectTotemItems()
+		end
+
+		if 	_G.AutoUpgradeTotem == true then
+
+			-- Funktion zum Finden des nächsten Teils
+			local function findNearestPart(A)
+				local closestPart = nil
+				local closestDistance = math.huge
+				local playerPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+				local Table = A
+
+				for i, part in ipairs(Table) do
+					local distance = (part.Position - playerPosition).magnitude
+					if distance < closestDistance then
+						closestPart = part
+						closestDistance = distance
+					end
+				end
+
+				DebugCheck(0,"findNearestPart")
+
+				return closestPart
+			end
+
+			local Island = GetIsland()
+
+			local Totems = {}
+
+			for i,v in ipairs(Island:FindFirstChild("Blocks"):GetChildren()) do
+				if v.Name == _G.SelectedTotem then
+
+					if v:FindFirstChild("UpgradeProgress"):FindFirstChild(_G.SelectedUpgrade) then
+						if v:FindFirstChild("UpgradeProgress"):FindFirstChild(_G.SelectedUpgrade).Value <= _G.TotemLevel then
+							table.insert(Totems, v)
+							task.wait()
+						else
+							DebugCheck(0,"Level erreicht!")
+							return nil 
+						end
+					else 
+						DebugCheck(0,"UpgradeProgress not found!")
+						return nil 
+					end
+				end
+			end
+
+			local NearestTotem = findNearestPart(Totems)
+
+			print("Nearest:",NearestTotem)
+
+			local v = NearestTotem
+
+			while NearestTotem and v:FindFirstChild("UpgradeProgress") and v:FindFirstChild("UpgradeProgress"):FindFirstChild(_G.SelectedUpgrade).Value < _G.TotemLevel do
+
+				if _G.AutoUpgradeTotem == false then 
+					return nil 
+				end
+
+
+				local Distance = (v.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+
+				if Distance > 10 then
+					print("Distance Kleiner als 20")
+					TeleportV4(v.Position)
+					repeat wait() TeleportV4(v.Position) until (v.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < 9 
+				end
+
+
+				local ohInstance1 = v
+				local ohString2 = GetName(v.Name)
+				local ohString3 = _G.SelectedUpgrade
+
+				game:GetService("ReplicatedStorage").rbxts_include.node_modules["@rbxts"].net.out._NetManaged.UpgradeBlock:InvokeServer(ohInstance1, ohString2, ohString3)
+
+
+			end
+
+		end -- abfrage
+
+		-- TOTEM --
+
+		-- KillAura
+		if _G.MobKillAura then
+			KillAura()
+		end
+
+	end)
+
+--[[
+
+
+DebugCheck(0,"Gui lol!")
+
+Gui:FindFirstChild("Main").MouseEnter:Connect(function()
+	DebugCheck(0,"INGUI")
+	CANUSEAUTOCLICKER = false
+end)
+
+Gui:FindFirstChild("Main").MouseLeave:Connect(function()
+	DebugCheck(0,"OUTOFUI")
+	CANUSEAUTOCLICKER = true
+end)
+
+
+]]
+--[[
+
+game:GetService("RunService").RenderStepped:connect(function()
+	if _G.DebugMode ~= true then
+		-- DebugCheck(0,Hash())
+	end
+
+	if Gui then
+		Gui.Name = Hash()
+		for i,v in ipairs(Gui:GetChildren()) do
+			v.Name = Hash()
+		end
+	end
+end)
+
+while Rayfield ~= nil do
+
+
+	local VERSION = loadstring(game:HttpGet('https://raw.githubusercontent.com/pascaldercoole1/NekoHub-Beta/main/MAIN_VERSION'))()
+
+	local C_VERSION = 1
+
+	if VERSION ~= C_VERSION then
+		-- game.Players.LocalPlayer:Kick("SCRIPT OFFLINE :(")
+	end
+end
+
+game.Players.LocalPlayer:Kick("SCRIPT IS BROKE! WE ARE SORRY. Reload the script :D")
+
+]]
+
+
+
+
+
+
+
+
+
+
+	-- Addons:
+	-- SaveManager (Allows you to have a configuration system)
+	-- InterfaceManager (Allows you to have a interface managment system)
+
+	-- Hand the library over to our managers
+	SaveManager:SetLibrary(Fluent)
+	InterfaceManager:SetLibrary(Fluent)
+
+	-- Ignore keys that are used by ThemeManager.
+	-- (we dont want configs to save themes, do we?)
+	SaveManager:IgnoreThemeSettings()
+
+	-- You can add indexes of elements the save manager should ignore
+	SaveManager:SetIgnoreIndexes({})
+
+	-- use case for doing it this way:
+	-- a script hub could have themes in a global folder
+	-- and game configs in a separate folder per game
+	InterfaceManager:SetFolder("Nekohub/Islands")
+	SaveManager:SetFolder("Nekohub/Islands")
+
+	InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+	SaveManager:BuildConfigSection(Tabs.Settings)
+
+
+	Window:SelectTab(1)
+
+	Fluent:Notify({
+		Title = "Fluent",
+		Content = "The script has been loaded.",
+		Duration = 8
+	})
+
+	-- You can use the SaveManager:LoadAutoloadConfig() to load a config
+	-- which has been marked to be one that auto loads!
+	SaveManager:LoadAutoloadConfig()
+
+	print("Script Loaded!")
+
+
+
+
+
+	-- end
+	-- endwdddd
